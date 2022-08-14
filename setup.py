@@ -14,7 +14,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     scripts=[],
-    url="https://github.com/dratio-io/dratio-client",
+    url="https://github.com/dratio-io/dratio-python",
     packages=["dratio"],
     license="Apache 2.0",
     platforms="Posix; MacOS X; Windows",
