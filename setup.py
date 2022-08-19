@@ -13,8 +13,14 @@ setup(
     description="Python client library for dratio.io API Web services",
     long_description=readme,
     long_description_content_type="text/markdown",
+    author="dratio.io",
+    author_email="info@dratio.io",
     scripts=[],
     url="https://github.com/dratio-io/dratio-python",
+    project_urls={
+        'Home': 'https://dratio.io',
+        'GitHub': 'https://github.com/dratio-io/dratio-python'
+    },
     packages=["dratio"],
     license="Apache 2.0",
     platforms="Posix; MacOS X; Windows",
