@@ -1,8 +1,18 @@
-![dratio.io logo](https://user-images.githubusercontent.com/16774925/184549419-b05ebfd2-436e-41e2-9172-a05d53e67c1d.svg)
 
----
+<p align="center">
+  <a href="https://dratio.io">
+    <img src="https://user-images.githubusercontent.com/16774925/184549419-b05ebfd2-436e-41e2-9172-a05d53e67c1d.svg">
+  </a>
+</p>
+
+
+
 
 # Python Client for dratio.io API web services
+
+[![PyPI version](https://badge.fury.io/py/dratio.svg)](https://pypi.org/project/dratio/)
+[![Python version](https://img.shields.io/pypi/pyversions/dratio)](https://pypi.org/project/dratio/)
+[![GitHub](https://img.shields.io/github/license/dratio-io/dratio-python)](https://github.com/dratio-io/dratio-python/blob/main/LICENSE)
 
 Data as-a-service to help make better decisions based on technology
 
