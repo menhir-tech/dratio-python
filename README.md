@@ -35,7 +35,7 @@ to [info@dratio.io](mailto:info@dratio.io).
 
 ## Requirements
 
-- Python 3.5 or later.
+- Python 3.6 or later.
 - A dratio.io API key.
 
 ## API Keys

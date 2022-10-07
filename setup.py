@@ -1,7 +1,8 @@
 from setuptools import setup
 
 
-requirements = ["requests>=2.20.0,<3.0"]
+requirements = ["requests", "pandas>=0.21.1", "pyarrow"]
+geo_requirements = ["geopandas>=0.8"]
 
 with open("README.md") as f:
     readme = f.read()
@@ -9,7 +10,7 @@ with open("README.md") as f:
 
 setup(
     name="dratio",
-    version="0.0.1",
+    version="0.0.4",
     description="Python client library for dratio.io API Web services",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -24,14 +25,15 @@ setup(
     packages=["dratio"],
     license="Apache 2.0",
     platforms="Posix; MacOS X; Windows",
-    setup_requires=requirements,
     install_requires=requirements,
+    extras_require={
+        'geo':  geo_requirements
+    },
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -39,5 +41,5 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Topic :: Internet",
     ],
-    python_requires='>=3.5'
+    python_requires='>=3.6'
 )

@@ -21,8 +21,17 @@
 #     https://dratio.io/legal/terms
 #
 
-__version__ = "0.0.4"
+class DratioException(Exception):
+    """Base exception for all API exceptions"""
 
-from .client import Client
 
-__all__ = ["Client"]
+class ObjectNotFound(DratioException):
+    """Exception raised when the object is not found in the database"""
+
+    def __init__(self, name: str, code: str = None):
+
+        if code is None:
+            message = name
+        else:
+            message = f"{name} with code {code} not found"
+        super().__init__(message)
