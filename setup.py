@@ -3,7 +3,6 @@ from setuptools import setup
 
 requirements = ["requests", "pandas>=0.21.1", "pyarrow"]
 geo_requirements = ["geopandas>=0.8"]
-docs = ["sphinx", "sphinx_rtd_theme"]
 
 with open("README.md") as f:
     readme = f.read()
@@ -28,8 +27,7 @@ setup(
     platforms="Posix; MacOS X; Windows",
     install_requires=requirements,
     extras_require={
-        'geo':  geo_requirements,
-        'docs': docs
+        'geo':  geo_requirements
     },
     classifiers=[
         "Development Status :: 1 - Planning",
