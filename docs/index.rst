@@ -7,12 +7,17 @@
   :alt: Dratio.io: Python API client for dratio web services
   :target: https://dratio.io
 
+
 Welcome to dratio's client documentation!
 =========================================
 
 .. image:: https://badge.fury.io/py/dratio.svg
   :alt: PyPI version
   :target: https://pypi.org/project/dratio/
+
+.. image:: https://readthedocs.org/projects/dratio/badge/?version=latest
+    :target: https://dratio.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/pyversions/dratio
   :alt: Python Version
@@ -24,7 +29,7 @@ Welcome to dratio's client documentation!
 
 
 
-Data as-a-service to make better decisions based on technology.
+.. rubric:: Data as-a-service to make better decisions based on technology
 
 This client allows you to interact with the services offered by 
 `dratio.io <https://dratio.io>`_ using Python.
@@ -32,14 +37,10 @@ You can download ready-to-use datasets for all types of industries.
 All data is reviewed, documented and linked together by common variables, allowing you 
 to reference directly with your data without spending time on integration.
 
+.. contents::
 
 Installation
 ------------
-
-.. toctree::
-   :caption: Installation
-   :maxdepth: 2
-
 
 Currently, dratio's client is available in Python 3.7 to 3.10, regardless of the platform. 
 The stable version can be installed via `PyPI <https://pypi.org/project/dratio/>`_.
@@ -73,29 +74,63 @@ on `dratio.io`_.
 Get started
 -----------
 
-Una vez comenzado puedes descargar
+The :class:`Client <dratio.Client>` class allows you to access all API resources using your key.
 
 .. code-block:: python
-   
+
    from dratio import Client
 
    client = Client('<your_api_key>')
 
 
+Basic functionalities allow you to search and filter datasets available for download.
+
+.. code-block:: python
+
+   client.get_datasets()
+
+Once a :class:`Dataset <dratio.base.Dataset>` is selected, you can access its information and 
+download its content as a Pandas 
+:class:`DataFrame <pandas.DataFrame>` or, 
+in case of datasets with geographic information, as a 
+:class:`GeoDataFrame <geopandas.GeoDataFrame>`.
+
+.. code-block:: python
+
+   dataset = client.get('municipalities')
+
+   df = dataset.to_pandas() # Download as DataFrame
+   gdf = dataset.to_geopandas() # GeoDataFrame with geographic information
+
+
+License
+-------   
+
+This source code is licensed under the Apache License, Version 2.0. You may obtain a copy of
+the License at `apache.org <https://www.apache.org/licenses/LICENSE-2.0>`_.
+
+The use of Dratio's web services must be in accordance with 
+the `terms and conditions <https://dratio.io/legal/terms>`_ that can 
+be found at `dratio.io/legal/ <https://dratio.io/legal/>`.
 
 
 Support
 -------
 
 This library is supported by dratio's team.
-If you find a bug, or have a feature suggestion, please 
+If you find a bug, or have a feature suggestion, we would appreciate it if you 
 `create an issue <https://github.com/dratio-io/dratio-python>`_ or
 contact us through `our page <https://dratio.io/contact/>`_ or via mail
 to `info@dratio.io <mailto:info@dratio.io>`_.
 
+.. toctree::
+   :hidden:
+
+   Welcome <self>
 
 
-An exhaustive list of all the contents of the package can be found in the
-:ref:`genindex`.
+.. toctree::
+   :maxdepth: 1
+   :hidden:
 
-* :ref:`search`
+   api

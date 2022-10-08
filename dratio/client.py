@@ -76,6 +76,7 @@ class Client:
     BASE_URL = "https://dratio.io/api/"
 
     def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
+        """Initializes the Client object"""
         self._base_url = Client.BASE_URL
         self.persistent_session = persistent_session
         self._current_session = None
@@ -182,7 +183,7 @@ class Client:
             raise ValueError(
                 f"format must be 'pandas' or 'json', not {format}")
 
-        datasets = self._perform_request(Dataset.URL).json()
+        datasets = self._perform_request(Dataset._URL).json()
 
         if format == 'pandas':
             datasets = pd.json_normalize(datasets)

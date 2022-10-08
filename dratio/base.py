@@ -50,8 +50,9 @@ class BaseDBObject:
 
     Attributes
     ----------
-    URL : str
-        Relative URL used to perform requests to the database (class attribute).
+    _URL : str
+        Relative URL used to perform requests to the database (class attribute) 
+        (For internal usage).
 
     Notes
     -----
@@ -60,6 +61,7 @@ class BaseDBObject:
     """
 
     def __init__(self, code: str, client, **kwargs):
+        """Initializes the object"""
         self.code = code
         self._client = client
         self._fetched = False
@@ -115,7 +117,7 @@ class BaseDBObject:
                 If the object is not found in the database.
 
         """
-        relative_url = f"{self.URL}/{self.code}/"
+        relative_url = f"{self._URL}/{self.code}/"
         response = self._client._perform_request(
             relative_url, allowed_status=[404])
 
@@ -141,7 +143,7 @@ class Feature(BaseDBObject):
         Additional keyword arguments used to initialize the metadata information.
 
     """
-    URL = "upload/feature/"
+    _URL = "upload/feature/"
 
 
 class File(BaseDBObject):
@@ -157,9 +159,10 @@ class File(BaseDBObject):
         Additional keyword arguments used to initialize the metadata information.
 
     """
-    URL = "marketplace/token/file/"
+    _URL = "marketplace/token/file/"
 
     def __init__(self, code: str, client, **kwargs):
+        """Initializes the File object"""
         super().__init__(code, client, **kwargs)
         self._url = None
 
@@ -195,7 +198,7 @@ class Version(BaseDBObject):
         Additional keyword arguments used to initialize the metadata information.
 
     """
-    URL = "marketplace/token/version/"
+    _URL = "marketplace/token/version/"
 
     def get_files(self, filetype: Optional[Literal["parquet", "geoparquet"]] = None) -> list[File]:
         """Returns a list of files associated to the version.
@@ -215,7 +218,7 @@ class Version(BaseDBObject):
             params["filetype"] = filetype
 
         files = self._client._perform_request(
-            url=File.URL, params=params).json()
+            url=File._URL, params=params).json()
 
         return [File(client=self._client, **file) for file in files]
 
@@ -267,9 +270,10 @@ class Dataset(BaseDBObject):
 
     >>> df = dataset.to_pandas()
     """
-    URL = "marketplace/token/datasets/"
+    _URL = "marketplace/token/datasets/"
 
     def __init__(self, client, code: str, version: Optional[str] = None):
+        """Initializes the Dataset object"""
         super().__init__(code=code, client=client)
         if version is not None:
             raise NotImplementedError(
@@ -283,7 +287,7 @@ class Dataset(BaseDBObject):
         """Fetches information of the dataset features"""
         params = {"dataset": self.code}
         features = self._client._perform_request(
-            Feature.URL, params=params)
+            Feature._URL, params=params)
         self._features = features.json()
 
     def fetch(self) -> "Dataset":
@@ -325,7 +329,7 @@ class Dataset(BaseDBObject):
     def version(self) -> Version:
         """Return the current version of the dataset (Version, read-only)."""
         if self._version is None:
-            v = self._client._perform_request(url=Version.URL, params=dict(
+            v = self._client._perform_request(url=Version._URL, params=dict(
                 dataset=self.code)).json()
 
             if len(v) != 1:

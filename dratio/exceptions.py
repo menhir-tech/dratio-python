@@ -26,7 +26,7 @@ class DratioException(Exception):
 
 
 class ObjectNotFound(DratioException):
-    """Exception raised when the object is not found in the database"""
+    """Object is not found in the database"""
 
     def __init__(self, name: str, code: str = None):
 
