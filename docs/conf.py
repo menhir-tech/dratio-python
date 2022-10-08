@@ -40,6 +40,8 @@ intersphinx_mapping = {
 
 autodoc_default_options = {'members': True, 'inherited-members': True}
 
+autodoc_mock_imports = ["geopandas"]
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
