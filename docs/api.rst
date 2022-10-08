@@ -7,10 +7,12 @@ The main class for interacting with the services is :class:`Client <dratio.Clien
 From it you can request information from Datasets and generate 
 the rest of the objects of the package.
 
-.. autosummary::
-    :toctree: _api
+.. currentmodule:: dratio
 
-    dratio.Client
+.. autosummary::
+    :toctree: _autosummary
+
+    Client
 
 
 .. rubric:: Base classes
@@ -18,21 +20,25 @@ the rest of the objects of the package.
 All the elements of the database are represented as a class, 
 to allow access to the information in a transparent way.
 
-.. autosummary::
-    :toctree: _api
+.. currentmodule:: dratio.base
 
-    dratio.base.Dataset
-    dratio.base.Feature
-    dratio.base.Version
-    dratio.base.File
+.. autosummary::
+    :toctree: _autosummary
+
+    Dataset
+    Feature
+    Version
+    File
 
 .. rubric:: Exceptions
 
 All exceptions raised by interacting with the services are subclasses
 of :class:`DratioException <dratio.exceptions.DratioException>`.
 
-.. autosummary::
-    :toctree: _api
+.. currentmodule:: dratio.exceptions
 
-    dratio.exceptions.DratioException
-    dratio.exceptions.ObjectNotFound
+.. autosummary::
+    :toctree: _autosummary
+
+    DratioException
+    ObjectNotFound
