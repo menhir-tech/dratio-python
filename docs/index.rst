@@ -129,8 +129,8 @@ to `info@dratio.io <mailto:info@dratio.io>`_.
    Welcome <self>
 
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+.. .. toctree::
+..    :maxdepth: 1
+..    :hidden:
 
-   api
+..    api
