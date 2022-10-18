@@ -17,10 +17,10 @@ setup(
     author="dratio.io",
     author_email="info@dratio.io",
     scripts=[],
-    url="https://github.com/dratio-io/dratio-python",
     project_urls={
         'Home': 'https://dratio.io',
-        'GitHub': 'https://github.com/dratio-io/dratio-python'
+        'GitHub': 'https://github.com/dratio-io/dratio-python',
+        'Docs': 'https://dratio.readthedocs.io/',
     },
     packages=["dratio"],
     license="Apache 2.0",
