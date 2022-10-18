@@ -111,7 +111,7 @@ the License at `apache.org <https://www.apache.org/licenses/LICENSE-2.0>`_.
 
 The use of Dratio's web services must be in accordance with 
 the `terms and conditions <https://dratio.io/legal/terms>`_ that can 
-be found at `dratio.io/legal/ <https://dratio.io/legal/>`.
+be found at `dratio.io/legal/ <https://dratio.io/legal/>`_.
 
 
 Support
