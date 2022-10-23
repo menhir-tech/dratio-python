@@ -73,7 +73,7 @@ class Client:
 
 
     """
-    BASE_URL = "https://dratio.io/api/"
+    BASE_URL = "https://api.dratio.io/api/"
 
     def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
         """Initializes the Client object"""
