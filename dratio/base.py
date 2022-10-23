@@ -21,7 +21,7 @@
 #     https://dratio.io/legal/terms
 #
 import io
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 try: # Compatibility with Python 3.7
     from typing import Literal
@@ -205,7 +205,7 @@ class Version(BaseDBObject):
     """
     _URL = "marketplace/token/version/"
 
-    def get_files(self, filetype: Optional[Literal["parquet", "geoparquet"]] = None) -> list[File]:
+    def get_files(self, filetype: Optional[Literal["parquet", "geoparquet"]] = None) -> List[File]:
         """Returns a list of files associated to the version.
 
         Parameters
@@ -215,7 +215,7 @@ class Version(BaseDBObject):
 
         Returns
         -------
-        list[File]
+        List[File]
             List of files associated to the version.
         """
         params = dict(version=self.code)
@@ -324,8 +324,8 @@ class Dataset(BaseDBObject):
         return self
 
     @property
-    def features(self) -> list[Feature]:
-        """Return a list with all the features of the dataset (list[Feature], read-only)."""
+    def features(self) -> List[Feature]:
+        """Return a list with all the features of the dataset (List[Feature], read-only)."""
         if not self._fetched:
             self.fetch()
         return self._features

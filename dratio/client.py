@@ -24,7 +24,7 @@
 Client functionality, common across all API requests.
 """
 
-from typing import Any, Union
+from typing import Any, Union, List
 
 try: # Compatibility with Python 3.7
     from typing import Literal
@@ -110,7 +110,7 @@ class Client:
 
     def _perform_request(self,
                          url: str,
-                         allowed_status: list[int] = [],
+                         allowed_status: List[int] = [],
                          **kwargs) -> requests.Response:
         """Performs a request to the API.
 
@@ -118,7 +118,7 @@ class Client:
         ----------
         url : str
             Relative URL to perform the request to.
-        allowed_status : list[int], optional
+        allowed_status : List[int], optional
             List of allowed status codes. If the status code of the response is
             not in this list and is different than 200 Ok, a requests.HTTPError
             is raised. Defaults to [].
@@ -166,7 +166,7 @@ class Client:
 
         return Dataset(client=self, code=code)
 
-    def get_datasets(self, format: Literal['pandas', 'json'] = 'pandas') -> Union[pd.DataFrame, list[dict[str, Any]]]:
+    def get_datasets(self, format: Literal['pandas', 'json'] = 'pandas') -> Union[pd.DataFrame, List[dict[str, Any]]]:
         """Returns a dataframe or a list with information of the datasets available in the dratio.io marketplace.
 
         Parameters
@@ -176,7 +176,7 @@ class Client:
 
         Returns
         -------
-        Union[pd.DataFrame, list[dict[str, Any]]]
+        Union[pd.DataFrame, List[dict[str, Any]]]
             List of datasets available in the dratio.io marketplace.
 
         Raises

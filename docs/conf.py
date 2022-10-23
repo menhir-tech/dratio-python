@@ -6,16 +6,25 @@
 
 import os
 import sys
+import pkg_resources
 
 sys.path.append(os.path.abspath('../..'))
 sys.path.append(os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+try:
+    release = pkg_resources.get_distribution('dratio').version
+except pkg_resources.DistributionNotFound:
+    print('To build the documentation, the distribution information of '
+          'dratio has to be available.  Either install the package '
+          'into your development environment or run "setup.py develop" '
+          'to setup the metadata. A virtualenv is recommended. ')
+    sys.exit(1)
+
 project = 'dratio'
 copyright = '2022, dratio.io'
 author = 'dratio.io'
-release = '0.0.7'
 
 
 # -- General configuration ---------------------------------------------------
