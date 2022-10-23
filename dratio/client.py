@@ -24,9 +24,9 @@
 Client functionality, common across all API requests.
 """
 
-from typing import Any, Union, List
+from typing import Any, Dict, List, Union
 
-try: # Compatibility with Python 3.7
+try:  # Compatibility with Python 3.7
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
@@ -166,7 +166,7 @@ class Client:
 
         return Dataset(client=self, code=code)
 
-    def get_datasets(self, format: Literal['pandas', 'json'] = 'pandas') -> Union[pd.DataFrame, List[dict[str, Any]]]:
+    def get_datasets(self, format: Literal['pandas', 'json'] = 'pandas') -> Union[pd.DataFrame, List[Dict[str, Any]]]:
         """Returns a dataframe or a list with information of the datasets available in the dratio.io marketplace.
 
         Parameters
@@ -176,7 +176,7 @@ class Client:
 
         Returns
         -------
-        Union[pd.DataFrame, List[dict[str, Any]]]
+        Union[pd.DataFrame, List[Dict[str, Any]]]
             List of datasets available in the dratio.io marketplace.
 
         Raises
