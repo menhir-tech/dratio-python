@@ -24,7 +24,12 @@
 Client functionality, common across all API requests.
 """
 
-from typing import Any, Literal, Union
+from typing import Any, Union
+
+try: # Compatibility with Python 3.7
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import pandas as pd
 import requests

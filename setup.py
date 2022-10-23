@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-requirements = ["requests", "pandas>=0.21.1", "pyarrow"]
+requirements = ["requests", "pandas>=0.21.1", "pyarrow", "typing_extensions"]
 geo_requirements = ["geopandas>=0.8"]
 
 with open("README.md") as f:
