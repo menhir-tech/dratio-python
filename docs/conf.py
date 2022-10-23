@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath('..'))
 project = 'dratio'
 copyright = '2022, dratio.io'
 author = 'dratio.io'
-release = '0.0.4'
+release = '0.0.5'
 
 
 # -- General configuration ---------------------------------------------------
