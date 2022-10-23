@@ -13,9 +13,7 @@
 
 **Data as-a-service to make better decisions based on technology**
 
-## Description
-
-### What is dratio?
+## What is dratio?
 
 Dratio is the result of our experience creating solutions for data-driven decision making in a wide variety of industries. We provide tools and data as-a-service that enable to create robust data solutions in an agile way.
 
