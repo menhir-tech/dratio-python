@@ -23,7 +23,7 @@
 import io
 from typing import Any, Dict, List, Optional
 
-try: # Compatibility with Python 3.7
+try:  # Compatibility with Python 3.7
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
@@ -78,8 +78,7 @@ class BaseDBObject:
 
     @property
     def metadata(self) -> Dict[str, Any]:
-        """Information associated (metadata) to the object referenced in the database
-        (`Dict[str, Any]`, read-only).
+        """Information associated (metadata) (`Dict[str, Any]`, read-only).
 
         Notes
         -----
@@ -147,8 +146,145 @@ class Feature(BaseDBObject):
     **kwargs
         Additional keyword arguments used to initialize the metadata information.
 
+    Examples
+    --------
+
+    Initialize a client object and get a dataset object
+
+    >>> from dratio import Client
+    >>> client = Client("YOUR_API_KEY")
+    >>> dataset = client.get("municipalities")
+
+    Obtain a feature from the dataset features dictionary by column name
+
+    >>> feature = dataset.features.get("municipality_id")
+    >>> feature
+    Feature('municipalities__municipality-id')
+
+    Get feature's attributes
+
+    >>> feature.name
+    'Municipality ID'
+    >>> feature.description
+    'Municipality code (int format) assigned by the National Statistics Institute...'
+
+    Obtain all metadata associated with the feature
+
+    >>> feature.metadata
+    {'code': 'municipalities__municipality-id', ...}
+
     """
-    _URL = "upload/feature/"
+    _URL = "marketplace/token/features/"
+
+    @property
+    def name(self) -> str:
+        """Name of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the name of a feature.
+
+        >>> feature.name
+        'Municipality ID'
+        """
+        return self.metadata['name']
+
+    @property
+    def description(self) -> str:
+        """Description of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the description of a feature.
+
+        >>> feature.description
+        'Municipality code (int format) assigned by the National Statistics Institute...'
+
+        """
+        return self.metadata['description']
+
+    @property
+    def column(self) -> str:
+        """Name of the column in the dataset (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the column name of a feature.
+
+        >>> feature.description
+        'municipality_id'
+        """
+        return self.metadata['column']
+
+    @property
+    def feature_type(self) -> str:
+        """Type of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the type of a feature.
+
+        >>> feature.feature_type
+        'identifier'
+
+        """
+        return self.metadata['feature_type']
+
+    @property
+    def data_type(self) -> str:
+        """Data type of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the data type of a feature.
+
+        >>> feature.data_type
+        'int'
+
+        """
+        return self.metadata['data_type']
+
+    @property
+    def last_update(self) -> str:
+        """Date of the last update of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the last update date of a feature.
+
+        >>> feature.last_update
+        '2022-10-21'
+
+        """
+        return self.metadata['last_update']
+
+    @property
+    def next_update(self) -> str:
+        """Date of the next update of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the schedule of the next update for the feature.
+
+        >>> feature.next_update
+        '2024-01-01'
+
+        """
+        return self.metadata['next_update']
+
+    @property
+    def update_frequency(self) -> str:
+        """Frequency of the updates of the feature (`str`, read-only).
+
+        Examples
+        --------
+        Obtain the update frequency of a feature.
+
+        >>> feature.update_frequency
+        'yearly'
+
+        """
+        return self.metadata['update_frequency']
 
 
 class File(BaseDBObject):
@@ -250,30 +386,36 @@ class Dataset(BaseDBObject):
     Retrieve a dataset from the dratio.io marketplace:
 
     >>> from dratio import Client
-    >>> client = Client(key='<your_api_key>')
-    >>> dataset = client.get(code='unemployment-municipality')
+    >>> client = Client('YOUR_API_KEY')
+    >>> dataset = client.get('municipalities')
     >>> dataset
-    Dataset('unemployment-municipality')
+    Dataset('municipalities')
 
     Access fields included in the metadata of the dataset:
-
-    >>> dataset["description"]
-    'Monthly data on the number of unemployed persons by municipality, ...'
+    
+    >>> dataset.name
+    'Municipalities'
+    >>> dataset.description
+    'Municipalities of Spain according to the name under which they are registered ...'
 
     Get a dictionary with all metadata:
 
     >>> dataset.metadata
-    {'code': 'unemployment-municipality', 'name': 'Unemployment, contracts and ...', ...}
+    {'code': 'municipalities', 'name': 'Municipalities', 'description': ...}
 
 
     Get current version of the dataset
 
     >>> dataset.version
-    Version('unemployment-municipality-v1')
+    Version('municipalities-v1')
 
     Download a dataset as a pandas dataframe:
 
     >>> df = dataset.to_pandas()
+
+    Download as a geopandas dataframe (for geospatial datasets):
+
+    >>> gdf = dataset.to_geopandas()
     """
     _URL = "marketplace/token/datasets/"
 
@@ -293,7 +435,9 @@ class Dataset(BaseDBObject):
         params = {"dataset": self.code}
         features = self._client._perform_request(
             Feature._URL, params=params)
-        self._features = features.json()
+        features = features.json()
+        self._features = {
+            feature["column"]: Feature(client=self._client, code=feature["code"]) for feature in features}
 
     def fetch(self) -> "Dataset":
         """Updates the metadata dictionary of the dataset.
@@ -312,10 +456,10 @@ class Dataset(BaseDBObject):
 
         Raises
         ------
-            requests.exceptions.RequestException.
-                If the request fails due to an HTTP or Conection Error..
-            ObjectNotFound.
-                If the object is not found in the database.
+        requests.exceptions.RequestException.
+            If the request fails due to an HTTP or Conection Error..
+        ObjectNotFound.
+            If the object is not found in the database.
 
         """
         super().fetch()
@@ -324,11 +468,16 @@ class Dataset(BaseDBObject):
         return self
 
     @property
-    def features(self) -> List[Feature]:
-        """Return a list with all the features of the dataset (List[Feature], read-only)."""
+    def features(self) -> Dict[str, Feature]:
+        """Dictionary with features indexed by column name (Dict[str, Feature], read-only)."""
         if not self._fetched:
             self.fetch()
         return self._features
+
+    @property
+    def columns(self) -> List[str]:
+        """Return a list with all the columns of the dataset (List[str], read-only)."""
+        return list(self.features.keys())
 
     @property
     def version(self) -> Version:
@@ -344,7 +493,7 @@ class Dataset(BaseDBObject):
 
         return self._version
 
-    def to_pandas(self):
+    def to_pandas(self) -> 'pd.DataFrame':
         """Downloads the dataset as a pandas dataframe.
 
         Returns
@@ -374,7 +523,7 @@ class Dataset(BaseDBObject):
 
         return df
 
-    def to_geopandas(self):
+    def to_geopandas(self) -> 'gpd.GeoDataFrame':
         """Downloads the dataset as a geopandas geodataframe.
 
         Returns
@@ -388,6 +537,8 @@ class Dataset(BaseDBObject):
 
         Raises
         ------
+        ImportError.
+            If the geopandas library is not installed. You can install it using `pip install dratio[geo]`.
         requests.exceptions.RequestException.
             If the request fails due to an HTTP or Conection Error.
         """
@@ -414,3 +565,16 @@ class Dataset(BaseDBObject):
             gdf = pd.concat(gdf_list)
 
         return gdf
+
+
+    @property
+    def name(self) -> str:
+        """Name of the dataset (str, read-only)."""
+        return self.metadata["name"]
+
+    @property
+    def description(self) -> str:
+        """Description of the dataset (str, read-only)."""
+        return self.metadata["description"]
+
+    
