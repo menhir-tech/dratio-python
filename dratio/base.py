@@ -174,7 +174,7 @@ class Feature(BaseDBObject):
     {'code': 'municipalities__municipality-id', ...}
 
     """
-    _URL = "marketplace/token/features/"
+    _URL = "feature/"
 
     @property
     def name(self) -> str:
@@ -300,7 +300,7 @@ class File(BaseDBObject):
         Additional keyword arguments used to initialize the metadata information.
 
     """
-    _URL = "marketplace/token/file/"
+    _URL = "file/"
 
     def __init__(self, code: str, client, **kwargs):
         """Initializes the File object"""
@@ -319,11 +319,17 @@ class File(BaseDBObject):
         new url by calling this method. 
 
         """
-        if self._url is None:
-            self.fetch()
-            self._url = self._metadata.get('url')
+        relative_url = f"{self._URL}/{self.code}/download/"
+        response = self._client._perform_request(
+            relative_url)
 
-        return self._url
+        response = response.json()
+        url = response['url']
+        preview = response['preview']
+
+        # TODO: Warn about preview downloaded
+
+        return url
 
 
 class Version(BaseDBObject):
@@ -339,7 +345,7 @@ class Version(BaseDBObject):
         Additional keyword arguments used to initialize the metadata information.
 
     """
-    _URL = "marketplace/token/version/"
+    _URL = "version/"
 
     def get_files(self, filetype: Optional[Literal["parquet", "geoparquet"]] = None) -> List[File]:
         """Returns a list of files associated to the version.
@@ -392,7 +398,7 @@ class Dataset(BaseDBObject):
     Dataset('municipalities')
 
     Access fields included in the metadata of the dataset:
-    
+
     >>> dataset.name
     'Municipalities'
     >>> dataset.description
@@ -417,7 +423,7 @@ class Dataset(BaseDBObject):
 
     >>> gdf = dataset.to_geopandas()
     """
-    _URL = "marketplace/token/datasets/"
+    _URL = "dataset/"
 
     def __init__(self, client, code: str, version: Optional[str] = None):
         """Initializes the Dataset object"""
@@ -566,7 +572,6 @@ class Dataset(BaseDBObject):
 
         return gdf
 
-
     @property
     def name(self) -> str:
         """Name of the dataset (str, read-only)."""
@@ -576,5 +581,3 @@ class Dataset(BaseDBObject):
     def description(self) -> str:
         """Description of the dataset (str, read-only)."""
         return self.metadata["description"]
-
-    
