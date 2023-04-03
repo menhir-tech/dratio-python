@@ -21,8 +21,4 @@
 #     https://dratio.io/legal/terms
 #
 
-
-from .__version__ import __version__
-from .client import Client
-
-__all__ = ["Client"]
+__version__ = "0.0.10"

@@ -21,8 +21,11 @@
 #     https://dratio.io/legal/terms
 #
 
+"""
+This module contains the main classes for the dratio client objects.
+"""
+from .dataset import Dataset
+from .feature import Feature
+from .publisher import Publisher
 
-from .__version__ import __version__
-from .client import Client
-
-__all__ = ["Client"]
+__all__ = ["Dataset", "Feature", "Publisher"]

@@ -21,15 +21,51 @@
 #     https://dratio.io/legal/terms
 #
 
+from typing import Optional
+
+
 class DratioException(Exception):
-    """Base exception for all API exceptions"""
+    """
+    Base class for all dratio exceptions.
+
+    Attributes
+    ----------
+        message (str): The exception message.
+
+    """
+
+
+class PermissionDenied(DratioException):
+    """
+    User does not have permissions to perform the action.
+
+    Attributes
+    ----------
+        message (str): The exception message.
+
+    """
+
+    def __init__(self, message: Optional[str] = None):
+        if message is None:
+            message = (
+                "You do not have permissions to perform this action. "
+                "Please contact our support team to upgrade your account."
+            )
+
+        super().__init__(message)
 
 
 class ObjectNotFound(DratioException):
-    """Object is not found in the database"""
+    """
+    Object does not exists or does not have visibility permissions.
+
+    Attributes
+    ----------
+        message (str): The exception message.
+
+    """
 
     def __init__(self, name: str, code: str = None):
-
         if code is None:
             message = name
         else:

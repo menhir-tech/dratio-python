@@ -24,7 +24,7 @@
 Client functionality, common across all API requests.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
@@ -34,8 +34,17 @@ except ImportError:
 import pandas as pd
 import requests
 from requests.compat import urljoin
+import warnings
+import re
 
-from .base import Dataset
+from .resources.dataset import Dataset
+from .resources.feature import Feature
+from .resources.publisher import Publisher
+from .resources.dataset_version import Version
+from .resources.dataset_file import File
+
+from .__version__ import __version__
+from .utils import _format_list_response
 
 
 class Client:
@@ -78,7 +87,16 @@ class Client:
 
 
     """
+
     BASE_URL = "https://api.dratio.io/api/"
+    _KEY_REGEX = r"^[a-z0-9]{64}$"
+
+    _FEATURE_CLASS = Feature
+    _PUBLISHER_CLASS = Publisher
+    _FILE_CLASS = File
+    _DATASET_CLASS = Dataset
+    _VERSION_CLASS = Version
+    
 
     def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
         """Initializes the Client object"""
@@ -87,9 +105,23 @@ class Client:
         self._current_session = None
         self.key = key
 
+        self._check_key(key)
+
     def __repr__(self) -> str:
         """Represents Client object as a string"""
         return f"Client('{self.key[:6]}...')"
+
+    def _check_key(self, key: str) -> None:
+        """Checks that the API key is not empty"""
+        if not isinstance(key, str):
+            raise TypeError(f"key must be a string, not {type(key)}.")
+
+        if not re.match(Client._KEY_REGEX, key):
+            raise ValueError(
+                "key must be a 64-character string of lowercase and numbers. "
+                "Are you sure you are using a correct key? "
+                "You can obtain a new API key at https://dratio.io/app/api/."
+            )
 
     @property
     def _session(self) -> requests.Session:
@@ -98,8 +130,10 @@ class Client:
         """
         if self._current_session is None:
             session = requests.Session()
-            headers = {'Content-Type': 'application/json',
-                       'Authorization': f'Token {self.key}'}
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Token {self.key}",
+            }
             session.headers = headers
             if self.persistent_session:
                 self._current_session = session
@@ -108,10 +142,9 @@ class Client:
 
         return session
 
-    def _perform_request(self,
-                         url: str,
-                         allowed_status: List[int] = [],
-                         **kwargs) -> requests.Response:
+    def _perform_request(
+        self, url: str, allowed_status: List[int] = [], **kwargs
+    ) -> requests.Response:
         """Performs a request to the API.
 
         Parameters
@@ -145,7 +178,108 @@ class Client:
 
         return response
 
-    def get(self, code: str) -> Dataset:
+    def info(self) -> Dict[str, str]:
+        f"""Returns information about the dratio.io API.
+
+        Returns
+        -------
+        Dict[str, str]:
+            Dictionary with information about the dratio.io API, containing
+            the backend version and the client version.
+
+        Examples
+        --------
+
+        >>> from dratio import Client
+        >>> client = Client('Your API key')
+        >>> client.info()
+        {{'version': '0.0.1', 'client_version': '{__version__}'}}
+
+        """
+        response = self._perform_request(url="")
+        response.raise_for_status()
+
+        # Add client version to the response
+        info_data = response.json()
+        info_data["client_version"] = __version__
+
+        return info_data
+
+    def get(
+        self,
+        code: str,
+        version: str = None,
+        kind: Literal["dataset", "feature", "publisher"] = "dataset",
+    ) -> Union[Dataset, Feature]:
+        """Returns a Dataset object with the information associated with the
+        dataset through which the information can be downloaded.
+
+        Parameters
+        ----------
+        code : str
+            Unique identificador for a dataset in the database.
+            Codes can be searched in the dratio.io marketplace or
+            by using `get_datasets`.
+        version : str, optional
+            Version of the object to retrieve. If not specified, the latest
+            version is retrieved. Defaults to None.
+        kind : Literal["dataset", "feature", "publisher"]
+            Kind of object to retrieve. Defaults to "dataset".
+
+        Returns
+        -------
+        Union[Dataset, Feature]
+            If kind=='dataset', returns a Dataset object with the information
+            associated with the dataset through which the information can be
+            downloaded. If kind=='feature', returns a Feature object with the
+            information associated with the feature through which the
+            information can be downloaded.
+            If kind=='publisher', returns a Publisher object with the
+            information associated with the publisher through which the
+            information can be downloaded.
+
+        Examples
+        --------
+
+        Retrieve a dataset from the dratio.io marketplace:
+
+        >>> from dratio import Client
+        >>> client = Client('Your API key')
+        >>> dataset = client.get(code='municipalities')
+        >>> dataset
+        Dataset('municipalities')
+
+        Download a dataset as a pandas dataframe:
+
+        >>> df_municipalities = dataset.to_pandas()
+
+        Retrieve a publisher from the dratio.io marketplace:
+
+        >>> publisher = client.get(code='ine', kind='publisher')
+        >>> publisher
+        Publisher('ine')
+
+        Get the datasets published by the INE:
+
+        >>> datasets = publisher.list_datasets()
+
+
+        Raises
+        ------
+        ValueError
+            If kind is not 'dataset', 'feature' or 'publisher'.
+
+        """
+        if kind == "dataset":
+            return Dataset(client=self, code=code, version=version)
+        elif kind == "feature":
+            return Feature(client=self, code=code, version=version)
+        elif kind == "publisher":
+            raise NotImplementedError("Publisher is not implemented yet.")
+
+        raise ValueError("kind must be either 'dataset' or 'feature'.")
+
+    def get_dataset(self, code: str, version: str = None) -> Dataset:
         """Returns a Dataset object with the information associated with the
         dataset through which the information can be downloaded.
 
@@ -164,9 +298,96 @@ class Client:
 
         """
 
-        return Dataset(client=self, code=code)
+        return Client._DATASET_CLASS(client=self, code=code, version=version)
 
-    def get_datasets(self, format: Literal['pandas', 'json'] = 'pandas') -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+    def get_publisher(self, code: str, version: Optional[str] = None):
+        """Returns a Dataset object with the information associated with the
+        dataset through which the information can be downloaded.
+
+        Parameters
+        ----------
+        code : str
+            Unique identificador for a dataset in the database.
+            Codes can be searched in the dratio.io marketplace or
+            by using `get_datasets`.
+
+        Returns
+        -------
+        Dataset
+            Dataset object with the information associated with the
+            dataset through which the information can be downloaded.
+
+        """
+        if version is not None:
+            warnings.warn("Version parameter is ignored when retrieving a publisher.")
+
+        return Client._PUBLISHER_CLASS(client=self, code=code)
+
+    def get_feature(self, code: str, version: Optional[str] = None) -> "Feature":
+        """Returns a Dataset object with the information associated with the
+        dataset through which the information can be downloaded.
+
+        Parameters
+        ----------
+        code : str
+            Unique identificador for a dataset in the database.
+            Codes can be searched in the dratio.io marketplace or
+            by using `get_datasets`.
+
+        Returns
+        -------
+        Dataset
+            Dataset object with the information associated with the
+            dataset through which the information can be downloaded.
+
+        """
+        return Client._FEATURE_CLASS(client=self, code=code, version=version)
+    
+    def get_file(self, code: str) -> "File":
+        """Returns a File object with the information associated with a
+        dataset stored file through which the information can be downloaded.
+
+        Parameters
+        ----------
+        code : str
+            Unique identificador for a file in the database.
+            Codes can be searched in the dratio.io marketplace or
+            by using `list_files` methods of a dataset.
+
+        Returns
+        -------
+        Dataset
+            Dataset object with the information associated with the
+            dataset through which the information can be downloaded.
+
+        """
+        return Client._FILE_CLASS(client=self, code=code)
+    
+    def _get_dataset_version(self, code: str) -> "Version":
+        """Returns a Version object with the information associated with the
+        version of a dataset.
+
+        Parameters
+        ----------
+        code : str
+            Unique identificador for a dataset version in the database.
+            Codes can be searched in the dratio.io marketplace or
+            by using `get_datasets`.
+
+        Returns
+        -------
+        Version
+            Version object with the information associated with the
+            latest version of the dataset.
+
+        """
+        return Client._VERSION_CLASS(client=self, code=code)
+
+    def list_datasets(
+        self,
+        format: Literal["pandas", "json"] = "pandas",
+        publisher: Optional[str] = None,
+    ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
         """Returns a dataframe or a list with information of the datasets available in the dratio.io marketplace.
 
         Parameters
@@ -177,20 +398,116 @@ class Client:
         Returns
         -------
         Union[pd.DataFrame, List[Dict[str, Any]]]
-            List of datasets available in the dratio.io marketplace.
+            List of datasets available in the dratio.io marketplace, as
+            a pandas dataframe or a list of dictionaries depending on the
+            value of `format`.
 
         Raises
         ------
         ValueError
             If `format` is not 'pandas' or 'json'.
+        HTTPError
+            In case of any error when performing the request to the API.
+
+        Examples
+        --------
+
+        >>> from dratio import Client
+        >>> client = Client("Your API key")
+        >>> df_datasets = client.list_datasets()
+
         """
-        if format not in ['pandas', 'json']:
-            raise ValueError(
-                f"format must be 'pandas' or 'json', not {format}")
+        params = {}
+        if publisher is not None:
+            params["publisher"] = publisher
 
-        datasets = self._perform_request(Dataset._URL).json()
+        kwargs = {} if not len(params) else {"params": params}
 
-        if format == 'pandas':
-            datasets = pd.json_normalize(datasets)
+        datasets = self._perform_request(Client._DATASET_CLASS._URL, **kwargs).json()
+        return _format_list_response(
+            datasets, format=format, fields=Client._DATASET_CLASS._LIST_FIELDS
+        )
 
-        return datasets
+    def list_features(
+        self,
+        format: Literal["pandas", "json"] = "pandas",
+        publisher: Optional[str] = None,
+    ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+        """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
+
+        Parameters
+        ----------
+        format : Literal['pandas', 'json'], optional
+            Format of the output. Defaults to 'pandas'.
+
+        Returns
+        -------
+        Union[pd.DataFrame, List[Dict[str, Any]]]
+            List of datasets available in the dratio.io marketplace, as
+            a pandas dataframe or a list of dictionaries depending on the
+            value of `format`.
+
+        Raises
+        ------
+        ValueError
+            If `format` is not 'pandas' or 'json'.
+        HTTPError
+            In case of any error when performing the request to the API.
+
+        Examples
+        --------
+
+        >>> from dratio import Client
+        >>> client = Client("Your API key")
+        >>> df_features = client.list_features()
+
+        """
+
+        params = {}
+        if publisher is not None:
+            params["publisher"] = publisher
+
+        kwargs = {} if not len(params) else {"params": params}
+
+        features = self._perform_request(Client._FEATURE_CLASS._URL, **kwargs).json()
+        return _format_list_response(
+            features, format=format, fields=Client._FEATURE_CLASS._LIST_FIELDS
+        )
+
+    def list_publishers(
+        self,
+        format: Literal["pandas", "json"] = "pandas",
+    ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+        """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
+
+        Parameters
+        ----------
+        format : Literal['pandas', 'json'], optional
+            Format of the output. Defaults to 'pandas'.
+
+        Returns
+        -------
+        Union[pd.DataFrame, List[Dict[str, Any]]]
+            List of features available in the dratio.io marketplace, as
+            a pandas dataframe or a list of dictionaries depending on the
+            value of `format`.
+
+        Raises
+        ------
+        ValueError
+            If `format` is not 'pandas' or 'json'.
+        HTTPError
+            In case of any error when performing the request to the API.
+
+        Examples
+        --------
+
+        >>> from dratio import Client
+        >>> client = Client("Your API key")
+        >>> df_publishers = client.list_publishers()
+
+        """
+        publishers = self._perform_request(Client._PUBLISHER_CLASS._URL).json()
+        return _format_list_response(
+            publishers, format=format, fields=Client._PUBLISHER_CLASS._LIST_FIELDS
+        )
