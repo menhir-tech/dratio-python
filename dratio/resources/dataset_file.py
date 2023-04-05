@@ -18,7 +18,7 @@
 # The use of the services offered by this client must be in accordance with
 # dratio's terms and conditions. You may obtain a copy of the terms at
 #
-#     https://dratio.io/legal/terms
+#     https://dratio.io/legal/terms/
 #
 """
 This module contains the File class used to represent a file in the database.
@@ -26,7 +26,6 @@ This module contains the File class used to represent a file in the database.
 import warnings
 from typing import TYPE_CHECKING, Union
 
-import pandas as pd
 import requests
 
 from ..exceptions import ObjectNotFound
@@ -34,12 +33,16 @@ from .base import DatabaseResource
 
 # Import client Type for type checking
 if TYPE_CHECKING:
+    import pandas as pd
+
     from ..client import Client
 
     try:  # Geopandas is optional
         import geopandas as gpd
     except ImportError:
         pass
+
+__all__ = ["File"]
 
 
 class File(DatabaseResource):
@@ -77,10 +80,8 @@ class File(DatabaseResource):
         information is initialized after is required.
         """
         super().__init__(code, client, **kwargs)
-        self._url = None
 
-    @property
-    def url(self) -> str:
+    def get_download_url(self) -> str:
         """URL used to download the file (`str`, read-only).
 
         Notes
@@ -95,11 +96,13 @@ class File(DatabaseResource):
         response = self._client._perform_request(relative_url)
         response = response.json()
 
-        url = response["url"]
-        preview = response["preview"]
+        url = response.get("url")
+        if url is None:
+            raise ObjectNotFound(
+                f"File with code {self.code} not found in the database."
+            )
 
-        # Warn about preview downloaded
-        if preview:
+        if response.get("preview"):  # Warn about preview downloaded
             warnings.warn(
                 "This file is not available in your plan. "
                 "You are downloading a preview of the file with a few example rows. "
@@ -163,21 +166,10 @@ class File(DatabaseResource):
         requests.exceptions.RequestException.
             If the request fails due to an HTTP or Conection Error.
         """
-        # files = self.version.get_files(filetype="parquet")
+        # Import pandas here to avoid importing it if not needed
+        import pandas as pd
 
-        # if not files:
-        #     raise ObjectNotFound("There are no available files for this dataset")
-
-        # df_list = []
-        # for file in files:
-        #     url = file.url
-        #     df = pd.read_parquet(url)
-        #     df_list.append(df)
-
-        # if len(df_list) > 1:
-        #     df = pd.concat(df_list)
-
-        url = self.url
+        url = self.get_download_url()
         df = pd.read_parquet(url)
 
         return df
@@ -215,32 +207,13 @@ class File(DatabaseResource):
                 "`pip install geopandas`."
             )
 
-        # files = self.version.get_files(filetype="geoparquet")
-
-        # if not files:
-        #     raise ObjectNotFound(
-        #         "There are no available files with geometries for this dataset. "
-        #         "Possibly this dataset does not have any geospatial information."
-        #     )
-
-        # gdf_list = []
-        # for file in files:
-        #     url = file.url
-        #     r = requests.get(url, allow_redirects=True)
-        #     f = io.BytesIO(r.content)
-        #     gdf = gpd.read_parquet(f)
-        #     gdf_list.append(gdf)
-
-        # if len(gdf_list) > 1:
-        #     gdf = pd.concat(gdf_list)
-
         if self.metadata["filetype"] != "geoparquet":
             raise ObjectNotFound(
                 "This dataset does not have any geospatial information."
                 "Please, use the `to_pandas` method to download the dataset."
             )
 
-        url = self.url
+        url = self.get_download_url()
         r = requests.get(url, allow_redirects=True)
         f = io.BytesIO(r.content)
         gdf = gpd.read_parquet(f)

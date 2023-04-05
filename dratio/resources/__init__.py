@@ -25,7 +25,9 @@
 This module contains the main classes for the dratio client objects.
 """
 from .dataset import Dataset
+from .dataset_file import File
+from .dataset_version import Version
 from .feature import Feature
 from .publisher import Publisher
 
-__all__ = ["Dataset", "Feature", "Publisher"]
+__all__ = ["Dataset", "Feature", "Publisher", "File", "Version"]

@@ -21,7 +21,8 @@
 #     https://dratio.io/legal/terms/
 #
 """
-This module contains the Publisher class.
+This module contains the Publisher class. A publisher is an data source 
+from which datasets are obtained.
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
@@ -33,9 +34,11 @@ except ImportError:
 from ..utils import _remove_and_copy
 from .base import DatabaseResource
 
-
 if TYPE_CHECKING:  # Pandas only as as type hint
     import pandas as pd
+
+    from .dataset import Dataset
+    from .feature import Feature
 
 __all__ = ["Publisher"]
 
@@ -73,7 +76,7 @@ class Publisher(DatabaseResource):
 
     >>> df_features = publisher.list_features()
 
-    Access the publisher's metadata
+    Access the publisher's metadata raw dictionary
 
     >>> publisher.metadata
     {'code': 'ine', 'name': 'National Statistics Institute (INE)', ...}
@@ -156,37 +159,41 @@ class Publisher(DatabaseResource):
         return _remove_and_copy(self.metadata.get("publisher_type"), "icon")
 
     def list_datasets(
-        self, format: Literal["pandas", "json"] = "pandas"
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]]]:
+        self, format: Literal["pandas", "json", "api"] = "pandas"
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]:
         """Returns a list of datasets associated to the publisher.
 
         Arguments
         ---------
         format : str, optional
-            Format of the output. Either "pandas" or "json". Defaults to "pandas".
+            Format of the output. Either "pandas", "json" or "api". Defaults to "pandas".
+            If "pandas", the output is a pandas DataFrame. If "json", the output is a
+            list of dictionaries. If "api", the output is a list of Dataset objects.
 
 
         Returns
         -------
-        Union["pd.DataFrame", List[Dict[str, Any]]]
+        Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]
             List of datasets associated to the publisher.
         """
 
         return self._client.list_datasets(publisher=self.code, format=format)
 
     def list_features(
-        self, format: Literal["pandas", "json"] = "pandas"
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]]]:
+        self, format: Literal["pandas", "json", "api"] = "pandas"
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
         """Returns a list of features associated to the publisher.
 
         Arguments
         ---------
         format : str, optional
-            Format of the output. Either "pandas" or "json". Defaults to "pandas".
+            Format of the output. Either "pandas", "json" or "api". Defaults to "pandas".
+            If "pandas", the output is a pandas DataFrame. If "json", the output is a
+            list of dictionaries. If "api", the output is a list of Feature objects.
 
         Returns
         -------
-        Union["pd.DataFrame", List[Dict[str, Any]]]
+        Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]
             List of features associated to the publisher.
         """
         return self._client.list_features(publisher=self.code, format=format)

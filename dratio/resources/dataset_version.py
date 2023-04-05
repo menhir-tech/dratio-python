@@ -1,8 +1,8 @@
 import io
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
 
 try:  # Compatibility with Python 3.7
-    from typing import Literal, Union
+    from typing import Literal
 except ImportError:
     from typing_extensions import Literal
 
@@ -15,6 +15,7 @@ if TYPE_CHECKING:  # Type hints
     from .dataset_file import File
     import pandas as pd
 
+__all__ = ["Version"]
 
 class Version(DatabaseResource):
     """Version of a dataset in the database

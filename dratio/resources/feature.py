@@ -147,11 +147,7 @@ class Feature(DatabaseResource):
     @property
     def dataset(self) -> Union["Dataset", None]:
         """Dataset to which the feature belongs (`Dataset`, read-only)."""
-
         dataset_code = self.metadata.get("dataset_code")
-        if dataset_code is None:
-            return None
-
         return self._client.get_dataset(dataset_code)
 
     @property
@@ -177,8 +173,5 @@ class Feature(DatabaseResource):
     @property
     def publisher(self) -> Union["Publisher", None]:
         """Publisher to which the feature belongs (`Publisher`, read-only)."""
-        value = self.metadata.get("publisher")
-        if value is None or value.get("code") is None:
-            return None
-
-        return self._client.get_publisher(value["code"])
+        publisher_code = self.metadata.get("publisher", {}).get("code")
+        return self._client.get_publisher(publisher_code)

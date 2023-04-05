@@ -18,20 +18,29 @@
 # The use of the services offered by this client must be in accordance with
 # dratio's terms and conditions. You may obtain a copy of the terms at
 #
-#     https://dratio.io/legal/terms
+#     https://dratio.io/legal/terms/
 #
 """
 Utilities for the dratio package.
 """
-
-from typing import Any, Dict, List, Union, Optional
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
 
-import pandas as pd
+if TYPE_CHECKING:  # Pandas only as as type hint
+    import pandas as pd
+
+
+__all__ = [
+    "_format_list_response",
+    "_remove_and_copy",
+    "_get_params_from_kwargs",
+    "_warn_param_used",
+]
 
 
 def _format_list_response(
@@ -40,7 +49,7 @@ def _format_list_response(
     fields: Optional[List[str]] = None,
     client: Optional[Any] = None,
     cls: Optional[Any] = None,
-) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+) -> Union["pd.DataFrame", List[Dict[str, Any]]]:
     """Formats a list of dictionaries as a pandas dataframe or a list of
     dictionaries.
 
@@ -73,11 +82,17 @@ def _format_list_response(
         raise ValueError(f"format must be 'pandas', 'json' or 'api', not {format}")
 
     if format == "pandas":
+        import pandas as pd
+
         data = pd.json_normalize(data)
         # Standardize column names
         data.columns = data.columns.str.replace(".", "_", regex=False)
 
         if fields is not None:
+            for f in fields:
+                if f not in data.columns:
+                    data[f] = None
+
             data = data[fields]
 
     if format == "api":
@@ -109,3 +124,22 @@ def _remove_and_copy(dictionary: dict, key: str) -> Union[dict, None]:
     if key in dictionary:
         del dictionary[key]
     return dictionary
+
+
+def _get_params_from_kwargs(**kwargs) -> dict:
+    """Auxiliar function to get the parameters from the keyword arguments.
+
+    Filters those params that are not None and returns a dictionary with them.
+    """
+    params = {}
+    for key, value in kwargs.items():
+        if value is not None:
+            params[key] = value
+
+    return params
+
+
+def _warn_param_used(param: Optional[Any], name: str):
+    """Auxiliar function to warn if ignored parameter is used."""
+    if param is not None:
+        warnings.warn(f"{name} parameter is ignored.")

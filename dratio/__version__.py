@@ -21,4 +21,4 @@
 #     https://dratio.io/legal/terms
 #
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"

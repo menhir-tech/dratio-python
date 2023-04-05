@@ -15,8 +15,11 @@ if TYPE_CHECKING:
     from .publisher import Publisher
     from .feature import Feature
     import geopandas as gpd
+    from ..client import Client
 
 from ..utils import _remove_and_copy
+
+__all__ = ["Dataset"]
 
 
 class Dataset(DatabaseResource):
@@ -239,11 +242,8 @@ class Dataset(DatabaseResource):
     @property
     def publisher(self) -> Union["Publisher", None]:
         """Name of the publisher of the dataset (str, read-only)."""
-        value = self.metadata.get("publisher")
-        if value is None:
-            return None
-
-        return self._client.get_publisher(code=value["code"])
+        publisher_code = self.metadata.get("publisher", {}).get("code")
+        return self._client.get_publisher(code=publisher_code)
 
     @property
     def license(self) -> Union[str, None]:
@@ -264,6 +264,50 @@ class Dataset(DatabaseResource):
     def level(self) -> Union[Dict[str, str], None]:
         """Level of the dataset (dict, read-only)."""
         return _remove_and_copy(self.metadata.get("level"), "icon")
+
+    def list_features(
+        self,
+        format: Literal["pandas", "json", "api"] = "pandas",
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
+        """List the features of the dataset.
+
+        Returns
+        -------
+        List[Feature]
+            List of features.
+
+        Examples
+        --------
+        >>>
+
+        Raises
+        ------
+        requests.exceptions.RequestException.
+            If the request fails due to an HTTP or Conection Error.
+        """
+        return self._client.list(kind="feature", dataset=self.code, format=format)
+
+    def list_versions(
+        self,
+        format: Literal["pandas", "json", "api"] = "pandas",
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Version"]]:
+        """List available versions of the dataset
+
+        Returns
+        -------
+        List[Feature]
+            List of features.
+
+        Examples
+        --------
+        >>>
+
+        Raises
+        ------
+        requests.exceptions.RequestException.
+            If the request fails due to an HTTP or Conection Error.
+        """
+        return self._client.list(kind="version", dataset=self.code, format=format)
 
     def to_pandas(self) -> "pd.DataFrame":
         """Downloads the dataset as a pandas dataframe.
