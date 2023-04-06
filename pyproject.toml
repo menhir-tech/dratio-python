@@ -6,9 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "dratio"
 description = "Python client library for dratio.io API Web services"
 requires-python = ">=3.7"
-readme = "file: README.md"
 license = { file = "LICENSE" }
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 dependencies = [
     "requests",
     "pandas>=0.21.1",
@@ -70,8 +69,9 @@ repository = "https://github.com/dratio-io/dratio-python"
 documentation = "https://dratio.readthedocs.io/"
 
 
-[tool.setuptools.packages.find]
-include = ["dratio*"]
+[tool.setuptools]
+packages = ["dratio"]
 
 [tool.setuptools.dynamic]
 version = {attr = "dratio.__version__"}
+readme = {file = ["README.md"], content-type = "text/markdown"}
