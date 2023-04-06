@@ -41,7 +41,7 @@ install_requires = [
     "requests",
     "pandas>=0.21.1",
     "pyarrow",
-    "typing_extensions",
+    "typing_extensions; python_version<'3.8'",
 ]
 python_requires = ">=3.7"
 

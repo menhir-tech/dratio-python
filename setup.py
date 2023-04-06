@@ -21,59 +21,7 @@
 #     https://dratio.io/legal/terms/
 #
 
-import os
-
 from setuptools import setup
 
-
-def read(rel_path: str) -> str:
-    """Read a file relative to the setup.py file"""
-    here = os.path.abspath(os.path.dirname(__file__))
-    # intentionally *not* adding an encoding option to open, See:
-    #   https://github.com/pypa/virtualenv/issues/201#issuecomment-3145690
-    try:
-        with open(os.path.join(here, rel_path)) as fp:
-            return fp.read()
-    except IOError:
-        return ""
-
-
-setup(
-    name="dratio",
-    version="0.0.11",
-    description="Python client library for dratio.io API Web services",
-    long_description=read("README.md"),
-    long_description_content_type="text/markdown",
-    author="dratio.io",
-    author_email="info@dratio.io",
-    scripts=[],
-    project_urls={
-        "Home": "https://dratio.io",
-        "GitHub": "https://github.com/dratio-io/dratio-python",
-        "Docs": "https://dratio.readthedocs.io/",
-    },
-    packages=["dratio"],
-    license="Apache 2.0",
-    platforms="Posix; MacOS X; Windows",
-    install_requires=["requests", "pandas>=0.21.1", "pyarrow", "typing_extensions"],
-    extras_require={"geo": ["geopandas>=0.8"]},
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Topic :: Scientific/Engineering :: Information Analysis",
-        "Topic :: Scientific/Engineering :: GIS",
-        "Topic :: Sociology",
-    ],
-    python_requires=">=3.7",
-)
+if __name__ == "__main__":
+    setup()
