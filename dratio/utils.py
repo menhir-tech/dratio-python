@@ -147,6 +147,6 @@ def _warn_param_used(param: Optional[Any], name: str):
 
 def get_version() -> str:
     """Returns the version of the dratio package."""
-    import pkg_resources
+    from . import __version__
 
-    return pkg_resources.get_distribution("dratio").version
+    return __version__
