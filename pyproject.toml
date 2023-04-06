@@ -1,20 +1,48 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "dratio"
-version = "0.0.11"
 description = "Python client library for dratio.io API Web services"
-authors = [{name="dratio.io", email="info@dratio.io"}]
-license = { file = "LICENSE" }
+requires-python = ">=3.7"
 readme = "file: README.md"
-
+license = { file = "LICENSE" }
+dynamic = ["version"]
+dependencies = [
+    "requests",
+    "pandas>=0.21.1",
+    "pyarrow",
+    "typing_extensions; python_version<'3.8'",
+]
+authors = [
+    {name="dratio.io", email="info@dratio.io"}
+]
+maintainers = [
+    {name="dratio.io", email="info@dratio.io"}
+]
+keywords = [
+    "dratio",
+    "API",
+    "client",
+    "data",
+    "web services",
+    "pandas",
+    "geopandas",
+    "data analysis",
+    "geospatial",
+    "demographics",
+    "marketing",
+    "income",
+    "consumption",
+    "GIS",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
@@ -27,6 +55,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Sociology",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+geo = [
+    "geopandas>=0.8",
 ]
 
 [project.urls]
@@ -34,17 +69,9 @@ homepage = "https://dratio.io"
 repository = "https://github.com/dratio-io/dratio-python"
 documentation = "https://dratio.readthedocs.io/"
 
-[options]
-packages = ["dratio"]
-install_requires = [
-    "requests",
-    "pandas>=0.21.1",
-    "pyarrow",
-    "typing_extensions; python_version<'3.8'",
-]
-python_requires = ">=3.7"
 
-[options.extras_require]
-geo = [
-    "geopandas>=0.8",
-]
+[tool.setuptools.packages.find]
+include = ["dratio*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "dratio.__version__"}
