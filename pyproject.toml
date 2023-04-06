@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dratio"
 description = "Python client library for dratio.io API Web services"
 requires-python = ">=3.7"
-license = { file = "LICENSE" }
+license = {text = "Apache-2.0"}
 dynamic = ["version", "readme"]
 dependencies = [
     "requests",
