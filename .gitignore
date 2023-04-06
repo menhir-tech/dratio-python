@@ -132,3 +132,4 @@ dmypy.json
 docs/_autosummary
 docs/_build
 *.ipynb
+.vscode

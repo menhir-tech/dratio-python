@@ -18,11 +18,33 @@
 # The use of the services offered by this client must be in accordance with
 # dratio's terms and conditions. You may obtain a copy of the terms at
 #
-#     https://dratio.io/legal/terms
+#     https://dratio.io/legal/terms/
 #
+"""
+This module contains the tags classes. A publisher is an data source 
+from which datasets are obtained.
+"""
+
+from .base import DatabaseResource
 
 
-from .__version__ import __version__
-from .client import Client
+__all__ = ["License", "LicenseItem"]
 
-__all__ = ["Client"]
+
+class License(DatabaseResource):
+    """
+    Class to represent a category in the database.
+    """
+
+    _URL = "license/"
+    _LIST_FIELDS = ['code', 'name', 'url']
+
+class LicenseItem(DatabaseResource):
+    """
+    Class to represent a license itemp in the database.
+    """
+
+    _URL = "license-item/"
+    _LIST_FIELDS = None
+
+
