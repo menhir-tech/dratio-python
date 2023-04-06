@@ -143,3 +143,10 @@ def _warn_param_used(param: Optional[Any], name: str):
     """Auxiliar function to warn if ignored parameter is used."""
     if param is not None:
         warnings.warn(f"{name} parameter is ignored.")
+
+
+def get_version() -> str:
+    """Returns the version of the dratio package."""
+    import pkg_resources
+
+    return pkg_resources.get_distribution("dratio").version

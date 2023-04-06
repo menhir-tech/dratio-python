@@ -38,18 +38,9 @@ def read(rel_path: str) -> str:
         return ""
 
 
-def get_version(rel_path: str) -> str:
-    """Read the version number from a source file"""
-    for line in read(rel_path).splitlines():
-        if line.startswith("__version__"):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    raise RuntimeError("Unable to find version string.")
-
-
 setup(
     name="dratio",
-    version=get_version("dratio/__init__.py"),
+    version="0.0.11",
     description="Python client library for dratio.io API Web services",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",

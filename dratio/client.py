@@ -37,11 +37,10 @@ import warnings
 import requests
 from requests.compat import urljoin
 
-from .__version__ import __version__
 from .resources import Dataset, Feature, File, Publisher, Version
 from .resources.category import Category, DataLevel, PusblisherType, Scope, Unit
 from .resources.license import License, LicenseItem
-from .utils import _get_params_from_kwargs, _warn_param_used
+from .utils import _get_params_from_kwargs, _warn_param_used, get_version
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -277,7 +276,7 @@ class Client:
         >>> from dratio import Client
         >>> client = Client('Your API key')
         >>> client.info()
-        {{'version': '0.0.1', 'client_version': '{__version__}', ...}}
+        {{'version': '0.0.1', 'client_version': '0.0.11', ...}}
 
         """
         response = self._perform_request(url="")
@@ -285,7 +284,7 @@ class Client:
 
         # Add client version to the response
         info_data = response.json()
-        info_data["client_version"] = __version__
+        info_data["client_version"] = get_version()
 
         return info_data
 
