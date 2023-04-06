@@ -159,8 +159,8 @@ class Client:
         """Checks that the client is compatible with the API version"""
 
         info = self.info()
-
-        if info["client_version"] not in info.get("client_compatibility", []):
+        __version__ = info["client_version"]
+        if __version__ not in info.get("client_compatibility", []):
             warnings.warn(
                 f"The client version ({__version__}) is not compatible with the "
                 f"API version ({info['version']}).\nPlease, update the client "

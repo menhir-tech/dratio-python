@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dratio"
+version = "0.0.11"
 description = "Python client library for dratio.io API Web services"
 authors = [{name="dratio.io", email="info@dratio.io"}]
 license = { file = "LICENSE" }
 readme = "file: README.md"
-version = "0.0.11"
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -33,7 +33,6 @@ classifiers = [
 homepage = "https://dratio.io"
 repository = "https://github.com/dratio-io/dratio-python"
 documentation = "https://dratio.readthedocs.io/"
-
 
 [options]
 packages = ["dratio"]
