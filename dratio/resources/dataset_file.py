@@ -143,7 +143,7 @@ class File(DatabaseResource):
         value = self.metadata.get("version")
         if value is None:
             return None
-        return self._client._get_dataset_version(code=value)
+        return self._client.get(code=value, kind="version")
 
     @property
     def dataset(self) -> Union[str, None]:

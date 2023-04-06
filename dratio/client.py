@@ -24,30 +24,63 @@
 Client to interact with dratio.io API
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
 
-import warnings
 import re
+import warnings
+
 import requests
 from requests.compat import urljoin
 
 from .__version__ import __version__
-from .resources.dataset import Dataset
-from .resources.dataset_file import File
-from .resources.dataset_version import Version
-from .resources.feature import Feature
-from .resources.publisher import Publisher
-from .utils import _get_params_from_kwargs
+from .resources import Dataset, Feature, File, Publisher, Version
+from .resources.category import (Category, DataLevel, PusblisherType, Scope,
+                                 Unit)
+from .resources.license import License, LicenseItem
+from .utils import _get_params_from_kwargs, _warn_param_used
 
 if TYPE_CHECKING:
     import pandas as pd
 
     from .resources.base import DatabaseResource
+
+
+__all__ = ["Client"]
+
+CLASSES_MAPPING = {
+    "dataset": Dataset,
+    "feature": Feature,
+    "file": File,
+    "publisher": Publisher,
+    "version": Version,
+    "category": Category,
+    "scope": Scope,
+    "unit": Unit,
+    "publisher-type": PusblisherType,
+    "data-level": DataLevel,
+    "license": License,
+    "license-item": LicenseItem,
+}
+
+DatabaseResourceLiteral = Literal[
+    "dataset",
+    "feature",
+    "file",
+    "publisher",
+    "version",
+    "category",
+    "scope",
+    "unit",
+    "publisher-type",
+    "data-level",
+    "license",
+    "license-item",
+]
 
 
 class Client:
@@ -57,7 +90,7 @@ class Client:
     ----------
     key : str
         API key to access dratio.io API. You can obtain your API key at
-        https://dratio.io/app/api. Please, keep this key in a safe place.
+        https://dratio.io/app/api/. Please, keep this key in a safe place.
     persistent_session : bool, optional
         Whether to use a persistent session to perform requests to the API.
         Defaults to True.
@@ -94,11 +127,7 @@ class Client:
     BASE_URL = "https://api.dratio.io/api/"
     _KEY_REGEX = r"^[a-z0-9]{64}$"
 
-    _FEATURE_CLASS = Feature
-    _PUBLISHER_CLASS = Publisher
-    _FILE_CLASS = File
-    _DATASET_CLASS = Dataset
-    _VERSION_CLASS = Version
+    _CLASSES_MAPPING = CLASSES_MAPPING
 
     def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
         """Initializes the Client object"""
@@ -139,6 +168,36 @@ class Client:
                 f"to the latest version with `pip install dratio --upgrade`.\n"
                 f"Possibly some functionalities may not work properly."
             )
+
+    @classmethod
+    def _resolve_class(cls, name: str) -> Type["DatabaseResource"]:
+        """
+        Given a class and a name, returns the corresponding class.
+
+        Parameters
+        ----------
+        name : str
+            Name of the class to resolve.
+
+        Returns
+        -------
+        Type[DatabaseResource]
+            Class corresponding to the name.
+
+        Raises
+        ------
+        ValueError
+            If the name is not a valid class.
+        """
+        resource_class = cls._CLASSES_MAPPING.get(name)
+
+        if resource_class is None:
+            raise ValueError(
+                f"Invalid resource name: {name}.\n"
+                f"Valid resource names are: {list(cls._CLASSES_MAPPING.keys())}.\n"
+            )
+
+        return resource_class
 
     @property
     def _session(self) -> requests.Session:
@@ -230,7 +289,7 @@ class Client:
         self,
         code: str,
         version: str = None,
-        kind: Literal["dataset", "feature", "publisher", "file", "version"] = "dataset",
+        kind: DatabaseResourceLiteral = "dataset",
     ) -> "DatabaseResource":
         """Returns a Dataset object with the information associated with the
         dataset through which the information can be downloaded.
@@ -295,18 +354,14 @@ class Client:
         if code is None:
             return None
 
-        if kind == "dataset":
-            return Client._DATASET_CLASS(client=self, code=code, version=version)
-        elif kind == "feature":
-            return Client._FEATURE_CLASS(client=self, code=code)
-        elif kind == "publisher":
-            return Client._PUBLISHER_CLASS(client=self, code=code)
-        elif kind == "version":
-            return Client._VERSION_CLASS(client=self, code=code)
-        elif kind == "file":
-            return Client._FILE_CLASS(client=self, code=code)
+        resource_cls = Client._resolve_class(kind)
 
-        raise ValueError(f"Incorrect kind: {kind}.")
+        if kind == "dataset":
+            return resource_cls(client=self, code=code, version=version)
+
+        _warn_param_used(version, "version")
+
+        return resource_cls(client=self, code=code)
 
     def get_dataset(self, code: str, version: str = None) -> Dataset:
         """Returns a Dataset object with the information associated with the
@@ -328,7 +383,7 @@ class Client:
         """
         return self.get(code=code, kind="dataset", version=version)
 
-    def get_publisher(self, code: str, version: Optional[str] = None):
+    def get_publisher(self, code: str):
         """Returns a Dataset object with the information associated with the
         dataset through which the information can be downloaded.
 
@@ -348,7 +403,7 @@ class Client:
         """
         return self.get(code=code, kind="publisher")
 
-    def get_feature(self, code: str, version: Optional[str] = None) -> "Feature":
+    def get_feature(self, code: str) -> "Feature":
         """Returns a Dataset object with the information associated with the
         dataset through which the information can be downloaded.
 
@@ -386,11 +441,11 @@ class Client:
             dataset through which the information can be downloaded.
 
         """
-        return Client._FILE_CLASS(client=self, code=code)
+        return self.get(code=code, kind="file")
 
     def list(
         self,
-        kind: Literal["dataset", "feature", "publisher", "file", "version"] = "dataset",
+        kind: DatabaseResourceLiteral = "dataset",
         format: Literal["pandas", "json", "api"] = "pandas",
         **kwargs,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["DatabaseResource"]]:
@@ -453,18 +508,9 @@ class Client:
 
         """
         params = _get_params_from_kwargs(**kwargs)
-        if kind == "dataset":
-            return Client._DATASET_CLASS._list(client=self, format=format, **params)
-        elif kind == "feature":
-            return Client._FEATURE_CLASS._list(client=self, format=format, **params)
-        elif kind == "publisher":
-            return Client._PUBLISHER_CLASS._list(client=self, format=format, **params)
-        elif kind == "version":
-            return Client._VERSION_CLASS._list(client=self, format=format, **params)
-        elif kind == "file":
-            return Client._FILE_CLASS._list(client=self, format=format, **params)
 
-        raise ValueError(f"Invalid kind: {kind}")
+        resource_cls = Client._resolve_class(kind)
+        return resource_cls._list(client=self, format=format, **params)
 
     def list_datasets(
         self,
