@@ -66,12 +66,8 @@ To gain a comprehensive understanding of the Dratio Python client and explore al
 
 This source code is licensed under the Apache License, Version 2.0. Obtain a copy of the License at [apache.org](https://www.apache.org/licenses/LICENSE-2.0).
 
-The use of the data offered by this client must comply with Dratio's terms and conditions. Obtain a copy of the terms at [dratio.io](https://dratio.io/legal/terms/).
+The use of the data offered by this client must comply with Dratio's terms and conditions. Obtain a copy of the terms at [dratio.io/legal/](https://dratio.io/legal/terms/).
 
 ## Support
 
 If you encounter a bug or have a feature suggestion, please log an issue or contact us through our page or via email at [info@dratio.io](mailto:info@dratio.io)
-
-## Community
-
-Join the Dratio community to ask questions, share ideas, and collaborate on projects. Stay up-to-date with the latest news and announcements by following us on [LinkedIn](https://www.linkedin.com/company/dratio-io/).
