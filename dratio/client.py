@@ -39,8 +39,7 @@ from requests.compat import urljoin
 
 from .__version__ import __version__
 from .resources import Dataset, Feature, File, Publisher, Version
-from .resources.category import (Category, DataLevel, PusblisherType, Scope,
-                                 Unit)
+from .resources.category import Category, DataLevel, PusblisherType, Scope, Unit
 from .resources.license import License, LicenseItem
 from .utils import _get_params_from_kwargs, _warn_param_used
 
@@ -125,14 +124,15 @@ class Client:
     """
 
     BASE_URL = "https://api.dratio.io/api/"
+    USE_PERSISTENT_SESSION: bool = True
     _KEY_REGEX = r"^[a-z0-9]{64}$"
 
     _CLASSES_MAPPING = CLASSES_MAPPING
 
-    def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
+    def __init__(self, key: str, base_url: Optional[str] = None) -> "Client":
         """Initializes the Client object"""
-        self._base_url = Client.BASE_URL
-        self.persistent_session = persistent_session
+        self._base_url = base_url or Client.BASE_URL
+        self.persistent_session = Client.USE_PERSISTENT_SESSION
         self._current_session = None
         self.key = key
         self._compatibility_checked = False
@@ -219,7 +219,11 @@ class Client:
         return session
 
     def _perform_request(
-        self, url: str, allowed_status: List[int] = [], **kwargs
+        self,
+        url: str,
+        allowed_status: List[int] = [],
+        method: Literal["GET", "POST", "PUT", "PATCH"] = "GET",
+        **kwargs,
     ) -> requests.Response:
         """Performs a request to the API.
 
@@ -251,7 +255,7 @@ class Client:
 
         url = urljoin(self._base_url, url)
 
-        response = self._session.get(url=url, **kwargs)
+        response = self._session.request(method=method, url=url, **kwargs)
 
         if response.status_code not in allowed_status:
             response.raise_for_status()

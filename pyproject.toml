@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[metadata]
+name = "dratio"
+description = "Python client library for dratio.io API Web services"
+author = "dratio.io"
+author_email = "info@dratio.io"
+license = "Apache-2.0"
+long_description = "file: README.md"
+long_description_content_type = "text/markdown"
+url = "https://dratio.io"
+homepage = "https://dratio.io"
+repository = "https://github.com/dratio-io/dratio-python"
+documentation = "https://dratio.readthedocs.io/"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Sociology",
+]
+
+[options]
+packages = ["dratio"]
+install_requires = [
+    "requests",
+    "pandas>=0.21.1",
+    "pyarrow",
+    "typing_extensions",
+]
+python_requires = ">=3.7"
+
+[options.extras_require]
+geo = [
+    "geopandas>=0.8",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "package.__version__"}

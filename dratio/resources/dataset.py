@@ -119,7 +119,7 @@ class Dataset(DatabaseResource):
             for feature in features
         }
 
-    def fetch(self) -> "Dataset":
+    def fetch(self, fail_not_found: bool) -> "Dataset":
         """Updates the metadata dictionary of the dataset.
 
         This method perform an HTTP request to the server to obtain the information.
@@ -142,7 +142,7 @@ class Dataset(DatabaseResource):
             If the object is not found in the database.
 
         """
-        super().fetch()
+        super().fetch(fail_not_found=fail_not_found)
         self._fetch_features()
 
         return self

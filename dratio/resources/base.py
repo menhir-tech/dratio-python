@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 
 __all__ = ["DatabaseResource"]
 
+# Constants
+NOT_FOUND_STATUS = 404
+
 
 class DatabaseResource:
     """
@@ -66,6 +69,7 @@ class DatabaseResource:
     """
 
     _LIST_FIELDS = None
+    _EDITABLE_FIELDS = None
 
     def __init__(self, code: str, client: "Client", **kwargs):
         """
@@ -74,7 +78,7 @@ class DatabaseResource:
         self.code = code
         self._client = client
         self._fetched = False
-        self._metadata = {**kwargs}
+        self._metadata = kwargs
 
     def __repr__(self) -> str:
         """
@@ -104,7 +108,22 @@ class DatabaseResource:
         """
         return self.metadata[key]
 
-    def fetch(self) -> "DatabaseResource":
+    def __setitem__(self, key: str, value: Any) -> None:
+        """
+        Provides a convenient way to set metadata attributes directly from the object.
+        """
+        if self._EDITABLE_FIELDS is None or key in self._EDITABLE_FIELDS:
+            if not self._fetched:
+                self.fetch(fail_not_found=False)
+
+            self.metadata[key] = value
+        else:
+            raise AttributeError(
+                f"Attribute '{key}' is not editable."
+                f" Editable attributes are: {self._EDITABLE_FIELDS}."
+            )
+
+    def fetch(self, fail_not_found: bool = True) -> "DatabaseResource":
         """
         Updates the metadata dictionary of the object by performing an HTTP request
         to the server.
@@ -113,6 +132,8 @@ class DatabaseResource:
         -------
         self : DatabaseResource
             The object itself.
+        fail_not_found : bool, default True
+            Whether to raise an exception if the object is not found in the database.
 
         Notes
         -----
@@ -126,12 +147,16 @@ class DatabaseResource:
             If the object is not found in the database.
         """
         relative_url = f"{self._URL}/{self.code}/"
-        response = self._client._perform_request(relative_url, allowed_status=[404])
+        response = self._client._perform_request(
+            relative_url, allowed_status=[NOT_FOUND_STATUS]
+        )
 
-        if response.status_code == 404:
-            raise ObjectNotFound(self.__class__.__name__, self.code)
+        if response.status_code == NOT_FOUND_STATUS:
+            if fail_not_found:
+                raise ObjectNotFound(self.__class__.__name__, self.code)
+        else:
+            self._metadata = response.json()
 
-        self._metadata = response.json()
         self._fetched = True
 
         return self
@@ -172,3 +197,26 @@ class DatabaseResource:
         )
 
         return data
+
+    def save(self) -> "DatabaseResource":
+        """
+        Saves the object's metadata to the database.
+
+        Returns
+        -------
+        self : DatabaseResource
+            The object itself.
+
+
+        Raises
+        ------
+        requests.exceptions.RequestException
+            If the request fails.
+        """
+        relative_url = f"{self._URL}/{self.code}/"
+        response = self._client._perform_request(
+            relative_url, method="PUT", json=self.metadata
+        )
+        self._metadata = response.json()
+
+        return self
