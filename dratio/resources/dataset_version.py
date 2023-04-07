@@ -34,10 +34,14 @@ except ImportError:
 from .base import DatabaseResource
 
 if TYPE_CHECKING:  # Type hints
+    from pathlib import Path
+
     import pandas as pd
+    import geopandas as gpd
 
     from .dataset import Dataset
     from .dataset_file import File
+
 
 __all__ = ["Version"]
 
@@ -74,6 +78,37 @@ class Version(DatabaseResource):
 
         dataset_code = self.metadata.get("dataset", {}).get("code")
         return self._client.get_dataset(code=dataset_code)
+
+    def upload_file(
+        self,
+        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        update: bool = False,
+    ):
+        """Uploads a file to the version.
+
+        Returns
+        -------
+        File
+            File object representing the uploaded file.
+        """
+        from ..provider.file_upload import _infer_filetype, _upload_file
+        url = f"{self._URL}{self.code}/upload/"
+        filetype = _infer_filetype(file, filetype)
+
+        content = self._client._perform_request(
+            url, method="POST", json={"update": update, "filetype": filetype}
+        ).json()
+
+        url = content["url"]
+        file_code = content["code"]
+        
+        _upload_file(file=file, filetype=filetype, url=url)
+
+        new_file = self._client.get_file(code=file_code)
+        new_file._update_availability()
+
+        return new_file
 
     def list_files(
         self,

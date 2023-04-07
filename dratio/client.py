@@ -40,7 +40,12 @@ from requests.compat import urljoin
 from .resources import Dataset, Feature, File, Publisher, Version
 from .resources.category import Category, DataLevel, PusblisherType, Scope, Unit
 from .resources.license import License, LicenseItem
-from .utils import _get_params_from_kwargs, _warn_param_used, get_version
+from .utils import (
+    _get_params_from_kwargs,
+    _raise_client_exception,
+    _warn_param_used,
+    get_version,
+)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -257,7 +262,7 @@ class Client:
         response = self._session.request(method=method, url=url, **kwargs)
 
         if response.status_code not in allowed_status:
-            response.raise_for_status()
+            _raise_client_exception(response)
 
         return response
 

@@ -111,6 +111,19 @@ class File(DatabaseResource):
             )
 
         return url
+    
+    def _update_availability(self) -> None:
+        """Updates the availability information of the file.
+
+        Notes
+        -----
+        This method is called automatically when the metadata information is
+        required. It is not necessary to call it manually.
+        """
+        relative_url = f"{self._URL}/{self.code}/check/"
+        response = self._client._perform_request(relative_url, method="POST")
+        response = response.json()
+
 
     @property
     def filetype(self) -> Union[str, None]:
