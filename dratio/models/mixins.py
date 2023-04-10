@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -18,16 +18,9 @@
 # The use of the services offered by this client must be in accordance with
 # dratio's terms and conditions. You may obtain a copy of the terms at
 #
-#     https://dratio.io/legal/terms
+#     https://dratio.io/legal/terms/
 #
-
 """
-This module contains the main classes for the dratio client objects.
+This module contains abstract classes to be used as mixins in the
+models.
 """
-from .dataset import Dataset
-from .dataset_file import File
-from .dataset_version import Version
-from .feature import Feature
-from .publisher import Publisher
-
-__all__ = ["Dataset", "Feature", "Publisher", "File", "Version"]

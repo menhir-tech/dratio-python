@@ -89,6 +89,7 @@ def _format_list_response(
         import pandas as pd
 
         data = pd.json_normalize(data)
+
         # Standardize column names
         data.columns = data.columns.str.replace(".", "_", regex=False)
 

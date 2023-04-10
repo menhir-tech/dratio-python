@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -21,6 +21,9 @@
 #     https://dratio.io/legal/terms/
 #
 
+"""
+Base class for database objects.
+"""
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from ..exceptions import ObjectNotFound
@@ -79,6 +82,7 @@ class DatabaseResource:
         self._client = client
         self._fetched = False
         self._metadata = kwargs
+        self._exists = None
 
     def __repr__(self) -> str:
         """
@@ -152,9 +156,11 @@ class DatabaseResource:
         )
 
         if response.status_code == NOT_FOUND_STATUS:
+            self._exists = False
             if fail_not_found:
                 raise ObjectNotFound(self.__class__.__name__, self.code)
         else:
+            self._exists = True
             self._metadata = response.json()
 
         self._fetched = True
@@ -213,10 +219,32 @@ class DatabaseResource:
         requests.exceptions.RequestException
             If the request fails.
         """
-        relative_url = f"{self._URL}/{self.code}/"
+
+        if self._exists:
+            relative_url = f"{self._URL}/{self.code}/"
+            method = "PATCH"
+
+        else:
+            relative_url = f"{self._URL}/"
+            self._metadata["code"] = self.code
+            method = "POST"
+
         response = self._client._perform_request(
-            relative_url, method="PUT", json=self.metadata
+            relative_url, method=method, json=self.metadata
         )
         self._metadata = response.json()
+        self._exists = True
 
-        return self
+    def delete(self) -> None:
+        """
+        Deletes the object from the database.
+
+        Raises
+        ------
+        requests.exceptions.RequestException
+            If the request fails.
+        """
+
+        relative_url = f"{self._URL}/{self.code}/"
+        self._client._perform_request(relative_url, method="DELETE")
+        self._exists = False

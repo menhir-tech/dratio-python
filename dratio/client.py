@@ -37,20 +37,16 @@ import warnings
 import requests
 from requests.compat import urljoin
 
-from .resources import Dataset, Feature, File, Publisher, Version
-from .resources.category import Category, DataLevel, PusblisherType, Scope, Unit
-from .resources.license import License, LicenseItem
-from .utils import (
-    _get_params_from_kwargs,
-    _raise_client_exception,
-    _warn_param_used,
-    get_version,
-)
+from .models import (Category, DataLevel, Dataset, Feature, File, License,
+                     LicenseItem, Publisher, PusblisherType, Scope, Unit,
+                     Version)
+from .utils import (_get_params_from_kwargs, _raise_client_exception,
+                    _warn_param_used, get_version)
 
 if TYPE_CHECKING:
     import pandas as pd
 
-    from .resources.base import DatabaseResource
+    from .models.base import DatabaseResource
 
 
 __all__ = ["Client"]

@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -29,7 +29,7 @@ the data. A Unit is a tag that describes the unit of measurement of the data.
 from .base import DatabaseResource
 
 
-__all__ = ["Category", "Scope", "Unit"]
+__all__ = ["Category", "Scope", "Unit", "PusblisherType", "DataLevel"]
 
 
 class Category(DatabaseResource):
@@ -41,6 +41,15 @@ class Category(DatabaseResource):
 
     _URL = "category/"
     _LIST_FIELDS = ["code", "name"]
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "description",
+        "icon",
+        "name_es",
+        "description_es",
+        "is_public",
+    ]
 
 
 class Scope(DatabaseResource):
@@ -52,6 +61,15 @@ class Scope(DatabaseResource):
 
     _URL = "scope/"
     _LIST_FIELDS = ["code", "name"]
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "description",
+        "icon",
+        "name_es",
+        "description_es",
+        "is_public",
+    ]
 
 
 class Unit(DatabaseResource):
@@ -63,6 +81,8 @@ class Unit(DatabaseResource):
 
     _URL = "unit/"
     _LIST_FIELDS = ["code", "name", "symbol"]
+    _EDITABLE_FIELDS = ["code", "name", "symbol", "name_es", "is_public"]
+
 
 class PusblisherType(DatabaseResource):
     """
@@ -73,6 +93,7 @@ class PusblisherType(DatabaseResource):
 
     _URL = "publisher-type/"
     _LIST_FIELDS = ["code", "name"]
+    _EDITABLE_FIELDS = ["code", "name", "icon", "name_es", "is_public"]
 
 
 class DataLevel(DatabaseResource):
@@ -82,5 +103,14 @@ class DataLevel(DatabaseResource):
     A unit is a tag that describes the unit of measurement of the data.
     """
 
-    _URL = "unit/"
-    _LIST_FIELDS = ["code", "name", "symbol"]
+    _URL = "data-level/"
+    _LIST_FIELDS = ["code", "name"]
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "description",
+        "icon",
+        "name_es",
+        "description_es",
+        "is_public",
+    ]

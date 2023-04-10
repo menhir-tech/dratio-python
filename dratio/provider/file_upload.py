@@ -23,14 +23,14 @@
 """
 Functionalities to manage file uploads
 """
-from typing import BinaryIO, TYPE_CHECKING, Optional, Union, Literal
-import pandas as pd
-import geopandas as gpd
-import requests
-from pathlib import Path
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import TemporaryFile
+from typing import TYPE_CHECKING, BinaryIO, Literal, Optional, Union
 
+import geopandas as gpd
+import pandas as pd
+import requests
 
 __all__ = ["_infer_filetype", "_upload_file"]
 

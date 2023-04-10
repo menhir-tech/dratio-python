@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -20,31 +20,29 @@
 #
 #     https://dratio.io/legal/terms/
 #
+
 """
-This module contains the tags classes. A publisher is an data source 
-from which datasets are obtained.
+This module contains the main models to encapsulate the data in the database.
 """
+from .tags import Category, DataLevel, PusblisherType, Scope, Unit
+from .dataset import Dataset
+from .dataset_file import File
+from .dataset_version import Version
+from .feature import Feature
+from .license import License, LicenseItem
+from .publisher import Publisher
 
-from .base import DatabaseResource
-
-
-__all__ = ["License", "LicenseItem"]
-
-
-class License(DatabaseResource):
-    """
-    Class to represent a category in the database.
-    """
-
-    _URL = "license/"
-    _LIST_FIELDS = ['code', 'name', 'url']
-
-class LicenseItem(DatabaseResource):
-    """
-    Class to represent a license itemp in the database.
-    """
-
-    _URL = "license-item/"
-    _LIST_FIELDS = None
-
-
+__all__ = [
+    "Category",
+    "DataLevel",
+    "Dataset",
+    "Feature",
+    "File",
+    "License",
+    "LicenseItem",
+    "Publisher",
+    "PusblisherType",
+    "Scope",
+    "Unit",
+    "Version",
+]
