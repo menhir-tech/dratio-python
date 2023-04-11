@@ -26,6 +26,10 @@ from which datasets are obtained.
 """
 
 from .base import DatabaseResource
+from typing import List, Literal, Union, Dict, TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 __all__ = ["License", "LicenseItem"]
@@ -38,6 +42,14 @@ class License(DatabaseResource):
 
     _URL = "license/"
     _LIST_FIELDS = ["code", "name", "url"]
+
+    def list_license_items(
+        self, format: Literal["pandas", "json", "api"] = "pandas"
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["LicenseItem"]]:
+        """
+        List the license items of the license.
+        """
+        return self._client.list(kind="license-item", format=format, license=self.code)
 
 
 class LicenseItem(DatabaseResource):
@@ -56,3 +68,10 @@ class LicenseItem(DatabaseResource):
         "description_es",
         "is_public",
     ]
+
+    @property
+    def license(self) -> "License":
+        """
+        Get the license of the license item.
+        """
+        return self._client.get(code=self.metadata.get("license"), kind="license")

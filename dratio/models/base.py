@@ -219,6 +219,8 @@ class DatabaseResource:
         requests.exceptions.RequestException
             If the request fails.
         """
+        if not self._fetched:
+            self.fetch(fail_not_found=False)
 
         if self._exists:
             relative_url = f"{self._URL}/{self.code}/"
