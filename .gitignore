@@ -132,7 +132,9 @@ dmypy.json
 docs/_autosummary
 docs/_build
 
+# Environment
 .vscode
+.DS_Store
 
 # Jupyter and data files
 *.ipynb
