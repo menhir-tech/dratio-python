@@ -112,6 +112,12 @@ class DatabaseResource:
         """
         return self.metadata[key]
 
+    def _check_value(self, key: str, value: Any) -> Any:
+        """
+        Used in inherited classes to check the value of a metadata attribute
+        """
+        pass
+
     def __setitem__(self, key: str, value: Any) -> None:
         """
         Provides a convenient way to set metadata attributes directly from the object.
@@ -119,6 +125,13 @@ class DatabaseResource:
         if self._EDITABLE_FIELDS is None or key in self._EDITABLE_FIELDS:
             if not self._fetched:
                 self.fetch(fail_not_found=False)
+
+            # Objects are referenced by their code
+            if hasattr(value, 'code'):
+                value = value.code
+
+            # Check value
+            self._check_value(key, value)
 
             self.metadata[key] = value
         else:
@@ -203,6 +216,10 @@ class DatabaseResource:
         )
 
         return data
+
+    def _save_subresources(self) -> None:
+        """Saves the subresources of the object."""
+        pass
 
     def save(self) -> "DatabaseResource":
         """

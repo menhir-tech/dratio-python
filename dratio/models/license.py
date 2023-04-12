@@ -21,27 +21,47 @@
 #     https://dratio.io/legal/terms/
 #
 """
-This module contains the tags classes. A publisher is an data source 
-from which datasets are obtained.
+This module contains the license and license item classes.
 """
 
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
+from .mixins import NameDescriptionMixin, ListDatasetsMixin, ListFeaturesMixin, ListPublisherMixin
+
 from .base import DatabaseResource
-from typing import List, Literal, Union, Dict, TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import pandas as pd
 
-
 __all__ = ["License", "LicenseItem"]
 
 
-class License(DatabaseResource):
+class License(DatabaseResource, ListFeaturesMixin, ListDatasetsMixin, ListPublisherMixin, NameDescriptionMixin):
     """
     Class to represent a category in the database.
     """
 
     _URL = "license/"
+    _FILTER_KEYWORD = "license"
     _LIST_FIELDS = ["code", "name", "url"]
+    _EDITABLE_FIELDS = ["code", "name", "url", "description",
+                        "name_es", "description_es", "is_public"]
+
+    @property
+    def license_items(self) -> List["LicenseItem"]:
+        """
+        Get the license items of the license.
+        """
+        if not hasattr(self, "_license_items"):
+            self._license_items = None
+
+        if self._license_items is None:
+            items = self._client.list(
+                kind="license-item", license=self.code, format="api")
+            # converts as a dict with code as key
+            items = {item.code.split('--')[-1]: item for item in items}
+            self._license_items = items
+
+        return self._license_items
 
     def list_license_items(
         self, format: Literal["pandas", "json", "api"] = "pandas"
@@ -51,10 +71,64 @@ class License(DatabaseResource):
         """
         return self._client.list(kind="license-item", format=format, license=self.code)
 
+    def add_license_item(self,
+                         code: str,
+                         name: str,
+                         description: str,
+                         grant: bool = None,
+                         name_es: str = None,
+                         description_es: str = None,
+                         is_public: bool = True
+                         ) -> "LicenseItem":
+        """
+        Add or overrides a license item to the license.
 
-class LicenseItem(DatabaseResource):
+        To add a license item to a license and save it in the database, you will
+        need to have edit or create permissions on the license.
+
+        Parameters
+        ----------
+        code : str
+            The code of the license item. The code 
+
+        Notes
+        -----
+        You will need to save the license to preserve the changes, including
+        the new license item.
+
+        """
+        item = self.license_items.get(code)
+        if item is None:
+            item = self._client.get(code=code, kind="license-item")
+
+        item['name'] = name
+        item['description'] = description
+        item['grant'] = grant
+        item['name_es'] = name_es
+        item['description_es'] = description_es
+        item['is_public'] = is_public
+        item['license'] = self.code
+
+        self.license_items[code] = item
+
+        return item
+
+    def _save_subresources(self) -> None:
+        """
+        Save the license items.
+        """
+
+        super()._save_subresources()
+
+        # Save the license items
+        for item in self.license_items.values():
+            item['license'] = self.code
+            item.save()
+
+
+class LicenseItem(DatabaseResource, NameDescriptionMixin):
     """
-    Class to represent a license itemp in the database.
+    Class to represent a license item in the database.
     """
 
     _URL = "license-item/"
@@ -67,9 +141,11 @@ class LicenseItem(DatabaseResource):
         "name_es",
         "description_es",
         "is_public",
+        'license',
+        'order'
     ]
 
-    @property
+    @ property
     def license(self) -> "License":
         """
         Get the license of the license item.

@@ -520,6 +520,7 @@ class Client:
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
         publisher: Optional[str] = None,
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]:
         """Returns a dataframe or a list with information of the datasets available in the dratio.io marketplace.
 
@@ -558,13 +559,14 @@ class Client:
 
 
         """
-        return self.list(kind="dataset", format=format, publisher=publisher)
+        return self.list(kind="dataset", format=format, publisher=publisher, license=license)
 
     def list_features(
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
         dataset: Optional[str] = None,
         publisher: Optional[str] = None,
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
         """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
 
@@ -597,12 +599,13 @@ class Client:
         """
 
         return self.list(
-            kind="feature", format=format, dataset=dataset, publisher=publisher
+            kind="feature", format=format, dataset=dataset, publisher=publisher, license=license
         )
 
     def list_publishers(
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Publisher"]]:
         """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
 
@@ -634,4 +637,4 @@ class Client:
 
         """
 
-        return self.list(kind="publisher", format=format)
+        return self.list(kind="publisher", format=format, license=license)

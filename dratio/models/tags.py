@@ -27,12 +27,13 @@ the data. A Unit is a tag that describes the unit of measurement of the data.
 """
 
 from .base import DatabaseResource
+from .mixins import NameDescriptionMixin, ListDatasetsMixin, ListFeaturesMixin
 
 
 __all__ = ["Category", "Scope", "Unit", "PusblisherType", "DataLevel"]
 
 
-class Category(DatabaseResource):
+class Category(DatabaseResource, NameDescriptionMixin):
     """
     Class to represent a category in the database.
 
@@ -52,7 +53,7 @@ class Category(DatabaseResource):
     ]
 
 
-class Scope(DatabaseResource):
+class Scope(DatabaseResource, NameDescriptionMixin):
     """
     Class to represent a scope in the database.
 
@@ -72,7 +73,7 @@ class Scope(DatabaseResource):
     ]
 
 
-class Unit(DatabaseResource):
+class Unit(DatabaseResource, NameDescriptionMixin):
     """
     Class to represent a unit in the database.
 
@@ -84,7 +85,7 @@ class Unit(DatabaseResource):
     _EDITABLE_FIELDS = ["code", "name", "symbol", "name_es", "is_public"]
 
 
-class PusblisherType(DatabaseResource):
+class PusblisherType(DatabaseResource, NameDescriptionMixin):
     """
     Class to represent a unit in the database.
 
@@ -96,7 +97,7 @@ class PusblisherType(DatabaseResource):
     _EDITABLE_FIELDS = ["code", "name", "icon", "name_es", "is_public"]
 
 
-class DataLevel(DatabaseResource):
+class DataLevel(DatabaseResource, NameDescriptionMixin):
     """
     Class to represent a unit in the database.
 

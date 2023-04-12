@@ -23,19 +23,49 @@
 """
 This module contains the Feature class.
 """
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING, Dict, Union, Any
 
-from ..utils import _remove_and_copy
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 from .base import DatabaseResource
+from .mixins import NameDescriptionMixin, CategoryMixin
 
 if TYPE_CHECKING:  # Pandas only as as type hint
     from .dataset import Dataset
     from .publisher import Publisher
+    from .license import License
+
+
+DATA_TYPES = {
+    'str': 'String',
+    'int': 'Integer',
+    'float': 'Float',
+    'text': 'Text',
+    'interval': 'Interval',
+    'date': 'Date',
+    'datetime': 'Datetime',
+    'geo': 'Geometry',
+}
+
+FEATURE_TYPES = {
+    'cat': 'Category',
+    'geo': 'Geometry',
+    'stat': 'Statistic',
+    'inter': 'Interval',
+    'id': 'Identifier',
+    'number': 'Number',
+    'perc': 'Percentage',
+}
+
 
 __all__ = ["Feature"]
 
 
-class Feature(DatabaseResource):
+class Feature(DatabaseResource, NameDescriptionMixin, CategoryMixin):
     """Feature of a dataset in the database
 
     Parameters
@@ -103,16 +133,21 @@ class Feature(DatabaseResource):
         "level_name",
         "categories",
     ]
-
-    @property
-    def name(self) -> str:
-        """The name of the feature. (`str`, read-only)."""
-        return self.metadata.get("name")
-
-    @property
-    def description(self) -> Union[str, None]:
-        """A brief description of the feature (`str`, read-only)."""
-        return self.metadata.get("description")
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "column",
+        "description",
+        "publisher",
+        "dataset",
+        "n_values",
+        "feature_type",
+        "data_type",
+        "license",
+        "name_es",
+        "description_es",
+        "reference_feature",
+    ]
 
     @property
     def column(self) -> Union[str, None]:
@@ -120,14 +155,19 @@ class Feature(DatabaseResource):
         return self.metadata.get("column")
 
     @property
-    def feature_type(self) -> Union[str, None]:
-        """The type of the feature (e.g., 'identifier', 'numeric') (`str`, read-only)."""
-        return self.metadata.get("feature_type")
+    def feature_type(self) -> Union[Literal['Category', 'Geometry', 'Statistic', 'Interval', 'Identifier', 'Number', 'Percentage'],  None]:
+        """The type of the feature (e.g., 'Category', 'Identifier') (`str`, read-only)."""
+
+        raw_feature_type = self.metadata.get("feature_type")
+        if raw_feature_type:
+            return FEATURE_TYPES.get(raw_feature_type)
 
     @property
-    def data_type(self) -> Union[str, None]:
-        """The data type of the feature (e.g., str, float) (`str`, read-only)."""
-        return self.metadata.get("data_type")
+    def data_type(self) -> Union[Literal['String', 'Integer', 'Float', 'Text', 'Interval', 'Date', 'Datetime', 'Geometry'],  None]:
+        """The data type of the feature (e.g., String, Integer, Float) (`str`, read-only)."""
+        raw_data_type = self.metadata.get("data_type")
+        if raw_data_type:
+            return DATA_TYPES.get(raw_data_type)
 
     @property
     def last_update(self) -> Union[str, None]:
@@ -147,8 +187,7 @@ class Feature(DatabaseResource):
     @property
     def dataset(self) -> Union["Dataset", None]:
         """Dataset to which the feature belongs (`Dataset`, read-only)."""
-        dataset_code = self.metadata.get("dataset_code")
-        return self._client.get(code=dataset_code, kind="dataset")
+        return self._client.get(code=self.metadata.get("dataset"), kind="dataset")
 
     @property
     def start_data(self) -> Union[str, None]:
@@ -163,15 +202,48 @@ class Feature(DatabaseResource):
     @property
     def scope(self) -> Union[Dict[str, str], None]:
         """Scope of the feature (`dict`, read-only)."""
-        return _remove_and_copy(self.metadata.get("scope"), "icon")
+        return self._client.get(code=self.metadata.get("scope"), kind="scope")
 
     @property
-    def level(self) -> Union[Dict[str, str], None]:
+    def data_level(self) -> Union[Dict[str, str], None]:
         """Level of the feature (`dict`, read-only)."""
-        return _remove_and_copy(self.metadata.get("level"), "icon")
+        return self._client.get(code=self.metadata.get("level"), kind="data-level")
 
     @property
     def publisher(self) -> Union["Publisher", None]:
         """Publisher to which the feature belongs (`Publisher`, read-only)."""
-        publisher_code = self.metadata.get("publisher", {}).get("code")
-        return self._client.get(code=publisher_code, kind="publisher")
+        return self._client.get(code=self.metadata.get("publisher"), kind="publisher")
+
+    @property
+    def license(self) -> Union["License", None]:
+        """License to which the feature belongs (`License`, read-only)."""
+        license_code = self.metadata.get("license")
+        dataset_license_code = self.metadata.get("dataset_license")
+        license_code = license_code or dataset_license_code
+        return self._client.get(code=license_code, kind="license")
+
+    @property
+    def reference_feature(self) -> Union["Feature", None]:
+        """Feature to which the feature belongs (`Feature`, read-only)."""
+        return self._client.get(code=self.metadata.get("reference_feature"), kind="feature")
+
+    @property
+    def reference(self) -> Union["Dataset", None]:
+        """Dataset to which the feature belongs (`Dataset`, read-only)."""
+        return self._client.get(code=self.metadata.get("reference"), kind="dataset")
+
+    def _check_value(self, key: str, value: Any) -> None:
+        """
+        Checks if the value is valid for the given key.
+        """
+        super()._check_value(key, value)
+
+        if key == 'feature_type':
+            if value and value not in FEATURE_TYPES.keys():
+                raise ValueError(
+                    f"Invalid feature_type: {value}. Valid values are: {list(FEATURE_TYPES.keys())}")
+
+        elif key == 'data_type':
+            if value and value not in DATA_TYPES.keys():
+                raise ValueError(
+                    f"Invalid data_type: {value}. Valid values are: {list(DATA_TYPES.keys())}")
