@@ -248,11 +248,10 @@ class DatabaseResource:
             self._metadata["code"] = self.code
             method = "POST"
 
-        response = self._client._perform_request(
+        self._client._perform_request(
             relative_url, method=method, json=self.metadata
         )
-        self._metadata = response.json()
-        self._exists = True
+        self.fetch(fail_not_found=True)
 
     def delete(self) -> None:
         """

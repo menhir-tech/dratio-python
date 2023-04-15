@@ -396,7 +396,99 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
                 raise ValueError(
                     f"Invalid {key}: {value}. Valid values are: {self.columns}")
 
-    # TODO -> Add feature
-    # TODO -> Add documentation
-    # TODO -> metadata_from_pandas
+    def add_feature(self, feature: "Feature") -> None:
+        """Adds a feature to the dataset.
 
+        Parameters
+        ----------
+        feature : Feature
+            Feature to add to the dataset.
+
+        Examples
+        --------
+        >>>
+
+        Raises
+        ------
+        requests.exceptions.RequestException.
+            If the request fails due to an HTTP or Conection Error.
+        """
+
+        if feature.column is None:
+            raise ValueError(
+                "The feature must have a column associated with it.")
+
+        # Check if the feature is already in the dataset
+        columns = feature.columns
+        codes = [f.code for f in self.features]
+
+        if feature.code in codes:
+            raise ValueError(
+                f"The feature {feature.code} is already in the dataset.\n"
+                f"Update the feature previously added instead of adding a new one.\n"
+                f"Already added features: {codes}")
+        if feature.column in columns:
+            raise ValueError(
+                f"The column {feature.column} is already in the dataset.\n"
+                f"Update the feature previously added instead of adding a new one.\n"
+                f"U")
+
+        # Add the feature to the dataset
+        feature["dataset"] = self
+        self._features.append(feature)
+
+    def _save_subresources(self) -> None:
+        """
+        Save the feature.
+        """
+        super()._save_subresources()
+
+        # Save the license items
+        for feature in self.features:
+            feature.save()
+
+    def save(self) -> "Dataset":
+        super().save()
+        self._features = None
+
+    def upload_file(
+        self,
+        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        update: bool = False,
+    ):
+        """Uploads a file to the version.
+
+        Returns
+        -------
+        File
+            File object representing the uploaded file.
+        """
+        return self.version.upload_file(file=file, filetype=filetype, update=update)
+
+    def list_files(
+        self,
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        format: Literal["pandas", "json", "api"] = "pandas",
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["File"]]:
+        """Returns a list of files associated to the version.
+
+        Parameters
+        ----------
+        filetype : Optional[Literal["parquet", "geoparquet"]]
+            Type of file to filter. If None, all files are returned.
+        format: Literal["pandas", "json"]
+            Format of the returned list, either a list of dictionaries or a
+            pandas DataFrame.
+
+        Returns
+        -------
+        Literal["pandas", "json"]
+            List of files associated to the version.
+        """
+        return self.version.list_files(filetype=filetype, format=format)
+
+    def metadata_from_pandas(self, df: Union["pd.DataFrame", "gpd.GeoDataFrame"]) -> "Dataset":
+        from ..provider.provider_utils import metadata_from_pandas
+
+        return metadata_from_pandas(dataset=self, df=df)

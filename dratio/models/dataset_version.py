@@ -30,6 +30,7 @@ try:  # Compatibility with Python 3.7
 except ImportError:
     from typing_extensions import Literal
 
+from .mixins import NameDescriptionMixin
 
 from .base import DatabaseResource
 
@@ -46,7 +47,7 @@ if TYPE_CHECKING:  # Type hints
 __all__ = ["Version"]
 
 
-class Version(DatabaseResource):
+class Version(DatabaseResource, NameDescriptionMixin):
     """Version of a dataset in the database
 
     Parameters
@@ -61,16 +62,6 @@ class Version(DatabaseResource):
     """
 
     _URL = "version/"
-
-    @property
-    def name(self) -> Union[str, None]:
-        """Name of the version"""
-        return self.metadata.get("name")
-
-    @property
-    def description(self) -> Union[str, None]:
-        """Description of the version"""
-        return self.metadata.get("description")
 
     @property
     def dataset(self) -> "Dataset":
