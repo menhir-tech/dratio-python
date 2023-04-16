@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -21,6 +21,9 @@
 #     https://dratio.io/legal/terms/
 #
 
+"""
+Base class for database objects.
+"""
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from ..exceptions import ObjectNotFound
@@ -37,6 +40,9 @@ if TYPE_CHECKING:
     from ..client import Client
 
 __all__ = ["DatabaseResource"]
+
+# Constants
+NOT_FOUND_STATUS = 404
 
 
 class DatabaseResource:
@@ -66,6 +72,7 @@ class DatabaseResource:
     """
 
     _LIST_FIELDS = None
+    _EDITABLE_FIELDS = None
 
     def __init__(self, code: str, client: "Client", **kwargs):
         """
@@ -74,7 +81,8 @@ class DatabaseResource:
         self.code = code
         self._client = client
         self._fetched = False
-        self._metadata = {**kwargs}
+        self._metadata = kwargs
+        self._exists = None
 
     def __repr__(self) -> str:
         """
@@ -104,7 +112,35 @@ class DatabaseResource:
         """
         return self.metadata[key]
 
-    def fetch(self) -> "DatabaseResource":
+    def _check_value(self, key: str, value: Any) -> Any:
+        """
+        Used in inherited classes to check the value of a metadata attribute
+        """
+        pass
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """
+        Provides a convenient way to set metadata attributes directly from the object.
+        """
+        if self._EDITABLE_FIELDS is None or key in self._EDITABLE_FIELDS:
+            if not self._fetched:
+                self.fetch(fail_not_found=False)
+
+            # Objects are referenced by their code
+            if hasattr(value, 'code'):
+                value = value.code
+
+            # Check value
+            self._check_value(key, value)
+
+            self.metadata[key] = value
+        else:
+            raise AttributeError(
+                f"Attribute '{key}' is not editable."
+                f" Editable attributes are: {self._EDITABLE_FIELDS}."
+            )
+
+    def fetch(self, fail_not_found: bool = True) -> "DatabaseResource":
         """
         Updates the metadata dictionary of the object by performing an HTTP request
         to the server.
@@ -113,6 +149,8 @@ class DatabaseResource:
         -------
         self : DatabaseResource
             The object itself.
+        fail_not_found : bool, default True
+            Whether to raise an exception if the object is not found in the database.
 
         Notes
         -----
@@ -126,12 +164,18 @@ class DatabaseResource:
             If the object is not found in the database.
         """
         relative_url = f"{self._URL}/{self.code}/"
-        response = self._client._perform_request(relative_url, allowed_status=[404])
+        response = self._client._perform_request(
+            relative_url, allowed_status=[NOT_FOUND_STATUS]
+        )
 
-        if response.status_code == 404:
-            raise ObjectNotFound(self.__class__.__name__, self.code)
+        if response.status_code == NOT_FOUND_STATUS:
+            self._exists = False
+            if fail_not_found:
+                raise ObjectNotFound(self.__class__.__name__, self.code)
+        else:
+            self._exists = True
+            self._metadata = response.json()
 
-        self._metadata = response.json()
         self._fetched = True
 
         return self
@@ -172,3 +216,53 @@ class DatabaseResource:
         )
 
         return data
+
+    def _save_subresources(self) -> None:
+        """Saves the subresources of the object."""
+        pass
+
+    def save(self) -> "DatabaseResource":
+        """
+        Saves the object's metadata to the database.
+
+        Returns
+        -------
+        self : DatabaseResource
+            The object itself.
+
+
+        Raises
+        ------
+        requests.exceptions.RequestException
+            If the request fails.
+        """
+        if not self._fetched:
+            self.fetch(fail_not_found=False)
+
+        if self._exists:
+            relative_url = f"{self._URL}/{self.code}/"
+            method = "PATCH"
+
+        else:
+            relative_url = f"{self._URL}/"
+            self._metadata["code"] = self.code
+            method = "POST"
+
+        self._client._perform_request(
+            relative_url, method=method, json=self.metadata
+        )
+        self.fetch(fail_not_found=True)
+
+    def delete(self) -> None:
+        """
+        Deletes the object from the database.
+
+        Raises
+        ------
+        requests.exceptions.RequestException
+            If the request fails.
+        """
+
+        relative_url = f"{self._URL}/{self.code}/"
+        self._client._perform_request(relative_url, method="DELETE")
+        self._exists = False

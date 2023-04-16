@@ -25,6 +25,8 @@ Utilities for the dratio package.
 """
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+import requests
+from .exceptions import InvalidRequest
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
@@ -40,6 +42,8 @@ __all__ = [
     "_remove_and_copy",
     "_get_params_from_kwargs",
     "_warn_param_used",
+    "get_version",
+    "_raise_client_exception",
 ]
 
 
@@ -85,8 +89,9 @@ def _format_list_response(
         import pandas as pd
 
         data = pd.json_normalize(data)
-        # Standardize column names
-        data.columns = data.columns.str.replace(".", "_", regex=False)
+        if len(data):
+            # Standardize column names
+            data.columns = data.columns.str.replace(".", "_", regex=False)
 
         if fields is not None:
             for f in fields:
@@ -143,3 +148,28 @@ def _warn_param_used(param: Optional[Any], name: str):
     """Auxiliar function to warn if ignored parameter is used."""
     if param is not None:
         warnings.warn(f"{name} parameter is ignored.")
+
+
+def get_version() -> str:
+    """Returns the version of the dratio package."""
+    from . import __version__
+
+    return __version__
+
+
+def _raise_client_exception(response: "requests.Response"):
+    """Raise an exception tryng to recover api error messages"""
+
+    if 400 <= response.status_code < 500:
+        try:
+            content = response.json()
+            if "detail" in content:
+                content = content["detail"]
+        # Catch Json Decode Error
+        except requests.exceptions.JSONDecodeError:
+            content = response.text
+
+        raise InvalidRequest(f"HTTP Error {response.status_code}: {content}")
+
+    # For non 4xx errors raise standard requests HTTPError
+    response.raise_for_status()

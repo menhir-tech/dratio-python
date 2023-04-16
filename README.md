@@ -4,76 +4,70 @@
   </a>
 </p>
 
-# Welcome to the Dratio Python client!
+# Dratio Python client
 
 [![PyPI version](https://badge.fury.io/py/dratio.svg)](https://pypi.org/project/dratio/)
 [![ReadTheDocs](https://readthedocs.org/projects/dratio/badge/?version=latest)](https://dratio.readthedocs.io/en/latest/?badge=latest)
 [![Python version](https://img.shields.io/pypi/pyversions/dratio)](https://pypi.org/project/dratio/)
 [![GitHub](https://img.shields.io/github/license/dratio-io/dratio-python)](https://github.com/dratio-io/dratio-python/blob/main/LICENSE)
 
-This client allows you to easily access and download data from the Dratio API using Python. With this client, you can seamlessly integrate Dratio's comprehensive range of data sets into your data science projects related to marketing, consumption, demographics, or income. Start leveraging the power of data to make data-driven decisions and drive innovation in your organization.
+The Dratio Python client allows you to effortlessly access and download data from the Dratio API using Python. Integrate a wide range of datasets from Dratio into your data science projects related to marketing, consumption, demographics, or income, and make data-driven decisions to drive innovation within your organization.
 
-To get started, simply install the client and authenticate with your Dratio API key. Then, you can use the provided methods to access and download the data you need. The data will be returned as a Pandas DataFrame, making it easy to manipulate and analyze.
-
+Get started by installing the client and authenticating with your Dratio API key. The client provides methods to access and download the data you need, returning the data as a Pandas DataFrame for easy manipulation and analysis.
 
 ## Installation
 
-Currently, dratio’s client is available in Python 3.7 to 3.10, regardless of the platform. The stable version can be installed via [PyPI](https://pypi.org/project/dratio/).
+The stable version of the Dratio Python client is available on [PyPI](https://pypi.org/project/dratio/) for Python 3.7 to 3.11, regardless of the platform. Install it using pip:
 
 ```bash
 pip install dratio
 ```
 
-In case of using datasets with geographic information, you must have [geopandas](https://geopandas.org/en/stable/) installed in your Python environment. You can also install the package with all the necessary dependencies directly using pip.
+For datasets with geographic information, ensure [geopandas](https://geopandas.org/en/stable/) is installed in your Python environment. Alternatively, install the package with all necessary dependencies using pip:
 
 ```bash
 pip install dratio[geo]
 ```
 
-## Create API Keys
+## API Keys
 
-Before you can start using the API,
-you will need to [create an API key](https://dratio.io/app/api/).
-If you are not registered you can [create an account on dratio.io](https://dratio.io/getstarted/).
+To use the API, [create an API key](https://dratio.io/app/api/). If you haven't registered, [create an account on dratio.io](https://dratio.io/getstarted/).
 
-| Please, store your API Keys in a safe place and never share them publicly, as they give access to all services offered on your behalf. In case of a leak, you can delete and create new keys.
+| Remember to securely store your API keys and avoid sharing them publicly. API keys grant access to all services on your behalf. If a key is compromised, delete and create new keys.
 
-## Get started
+## Getting Started
 
-The `Client` class allows you to access all API resources using your key.
+The `Client` class enables access to all API resources using your API key.
 
 ```python
 from dratio import Client
 
-client = Client('<your_api_key>')
+client = Client('Your API key')
 ```
 
-Basic functionalities allow you to search and filter datasets available for download.
+Basic functionality allows you to search and filter available datasets for download.
 
 ```python
-client.get_datasets()
+client.list_datasets()
 ```
 
-Once a `Dataset` is selected, you can access its information and
-download its content as a Pandas `DataFrame` or, in case of datasets with geographic
-information, as a `GeoDataFrame`.
+After selecting a `Dataset`, access its information and download its content as a Pandas `DataFrame` or, for datasets with geographic information, as a `GeoDataFrame`.
 
 ```python
-dataset = client.get('municipalities')
+dataset = client.get_dataset('municipalities')
 
 df = dataset.to_pandas() # Download as DataFrame
 gdf = dataset.to_geopandas() # GeoDataFrame with geographic information
 ```
 
-## License & Terms and conditions
+To gain a comprehensive understanding of the Dratio Python client and explore all its features, visit the [official documentation](https://dratio.readthedocs.com) on Read the Docs.
 
-This source code is licensed under the Apache License, Version 2.0. You may obtain a copy of
-the License at [apache.org](https://www.apache.org/licenses/LICENSE-2.0).
+## License & Terms and Conditions
 
-The use of the data offered by this client must be in accordance with dratio's terms and conditions. You may obtain a copy of the terms at [dratio.io](https://dratio.io/legal/terms)
+This source code is licensed under the Apache License, Version 2.0. Obtain a copy of the License at [apache.org](https://www.apache.org/licenses/LICENSE-2.0).
+
+The use of the data offered by this client must comply with Dratio's terms and conditions. Obtain a copy of the terms at [dratio.io/legal/](https://dratio.io/legal/terms/).
 
 ## Support
 
-If you find a bug, or have a feature suggestion, please log an issue or
-contact us through [our page](https://dratio.io/contact/) or via mail
-to [info@dratio.io](mailto:info@dratio.io).
+If you encounter a bug or have a feature suggestion, please log an issue or contact us through our page or via email at [info@dratio.io](mailto:info@dratio.io)

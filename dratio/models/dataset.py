@@ -1,3 +1,28 @@
+#
+# Copyright 2023 dratio.io. All rights reserved.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+#
+#
+# The use of the services offered by this client must be in accordance with
+# dratio's terms and conditions. You may obtain a copy of the terms at
+#
+#     https://dratio.io/legal/terms/
+#
+"""
+This module contains the dataset class.
+"""
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 try:  # Compatibility with Python 3.7
@@ -5,24 +30,49 @@ try:  # Compatibility with Python 3.7
 except ImportError:
     from typing_extensions import Literal
 
-import pandas as pd
-
 from ..exceptions import ObjectNotFound
 from .base import DatabaseResource
 from .dataset_version import Version
+from .mixins import CategoryMixin, ListFeaturesMixin, NameDescriptionMixin
 
 if TYPE_CHECKING:
-    from .publisher import Publisher
-    from .feature import Feature
-    from .dataset_file import File
-    import geopandas as gpd
+    from pathlib import Path
 
-from ..utils import _remove_and_copy
+    import geopandas as gpd
+    import pandas as pd
+
+    from .dataset_file import File
+    from .feature import Feature
+    from .license import License
+    from .publisher import Publisher
+    from .tags import DataLevel, Scope
+
+
+GRANULARITY_TYPES = {
+    'without': 'Without periodicity',
+    'custom': 'Custom',
+    'quinquennial': 'Quinquennial (Every 5 years)',
+    'quadrennial': 'Quadrennial (Every 4 years)',
+    'triennial': 'Triennial (every 3 years)',
+    'biennial': 'Biennial (every 2 years)',
+    'annual': 'Annual',
+    'semiannual': 'Semiannual (every 6 months)',
+    '4monthly': 'Every four months',
+    'quarterly': 'Quarterly (every 3 months)',
+    'every2months': 'Every two months',
+    'Monthly': 'Monthly',
+    'twicemonthly': 'Twice a month',
+    'weekly': 'Weekly',
+    'daily': 'Daily',
+    'dailybusiness': 'Daily Businness',
+    'hourly': 'Every hour',
+    'everyminute': 'Every minute',
+}
 
 __all__ = ["Dataset"]
 
 
-class Dataset(DatabaseResource):
+class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeaturesMixin):
     """Representation of a dataset in the database.
     This class allows to obtain information about the dataset and its
     versions and download as a pandas or geopandas dataframe.
@@ -78,86 +128,57 @@ class Dataset(DatabaseResource):
 
     # URL used to perform requests to the database
     _URL = "dataset/"
+    _FILTER_KEYWORD = "dataset"
 
     # Fields to be included in the list of datasets as a pandas dataframe
     _LIST_FIELDS = [
-        "code",
-        "name",
-        "dataset_type",
-        "last_update",
-        "n_values",
-        "start_data",
-        "last_data",
-        "granularity",
-        "scope_code",
-        "scope_name",
-        "level_code",
-        "level_name",
-        "publisher_code",
-        "publisher_name",
-        "categories",
-    ]
+        "code", "name", "dataset_type",
+        "last_update", "n_values",
+        "start_data", "last_data",
+        "granularity", "scope_code",
+        "scope_name", "level_code",
+        "level_name", "publisher_code",
+        "publisher_name", "categories"]
+
+    _EDITABLE_FIELDS = ['code', 'name',
+                        'name_es', 'is_public',
+                        'description', 'description_es',
+                        'order', 'last_update',
+                        'preview', 'timestamp_column',
+                        'start_data', 'last_data',
+                        'n_time_slices', 'n_values',
+                        'n_variables', 'n_features',
+                        'next_update', 'update_frequency',
+                        'granularity', 'categories',
+                        'level', "license", "scope"]
 
     def __init__(self, client, code: str, version: Optional[str] = None):
         """Initializes the Dataset object"""
         super().__init__(code=code, client=client)
         if version is not None:
-            raise NotImplementedError("Version selection is not implemented yet")
+            raise NotImplementedError(
+                "Version selection is not implemented yet")
 
         self._version_code = version
         self._version = None
         self._features = None
 
-    def _fetch_features(self) -> None:
-        """Fetches information of the dataset features"""
-        params = {"dataset": self.code}
-        url = self._client._resolve_class("feature")._URL
-        features = self._client._perform_request(url, params=params)
-        features = features.json()
-        self._features = {
-            feature["column"]: self._client.get_feature(feature["code"])
-            for feature in features
-        }
-
-    def fetch(self) -> "Dataset":
-        """Updates the metadata dictionary of the dataset.
-
-        This method perform an HTTP request to the server to obtain the information.
-
-        Returns
-        -------
-            self: Dataset
-                The object itself.
-
-        Notes
-        -----
-        This method modifies the object's metadata attribute.
-
-
-        Raises
-        ------
-        requests.exceptions.RequestException.
-            If the request fails due to an HTTP or Conection Error..
-        ObjectNotFound.
-            If the object is not found in the database.
-
-        """
-        super().fetch()
-        self._fetch_features()
-
-        return self
-
     @property
-    def features(self) -> Dict[str, "Feature"]:
+    def features(self) -> List["Feature"]:
         """Dictionary with features indexed by column name (Dict[str, Feature], read-only)."""
-        if not self._fetched:
-            self.fetch()
+
+        if self._features is None:
+            self._features = [self._client.get_feature(
+                code=code) for code in self.metadata.get("feature_set")]
+
         return self._features
 
     @property
     def columns(self) -> List[str]:
         """Return a list with all the columns of the dataset (List[str], read-only)."""
-        return list(self.features.keys())
+        cols = [f.column for f in self.features]
+        # Filter none values
+        return [c for c in cols if c is not None]
 
     @property
     def version(self) -> "Version":
@@ -173,16 +194,6 @@ class Dataset(DatabaseResource):
             self._version = self._client.get(code=v, kind="version")
 
         return self._version
-
-    @property
-    def name(self) -> str:
-        """Name of the dataset (str, read-only)."""
-        return self.metadata["name"]
-
-    @property
-    def description(self) -> Union[str, None]:
-        """Description of the dataset (str, read-only)."""
-        return self.metadata.get("description")
 
     @property
     def timestamp_column(self) -> Union[str, None]:
@@ -232,60 +243,45 @@ class Dataset(DatabaseResource):
     @property
     def update_frequency(self) -> Union[str, None]:
         """Update frequency of the dataset (str, read-only)."""
-        return self.metadata.get("update_frequency")
+        raw_update_frequency = self.metadata.get("update_frequency")
+        return GRANULARITY_TYPES.get(raw_update_frequency)
 
     @property
     def granularity(self) -> Union[str, None]:
         """Granularity of the dataset, i.e., the time between different timestamps points (str, read-only)."""
-        return self.metadata.get("granularity")
+        raw_granularity = self.metadata.get("granularity")
+        return GRANULARITY_TYPES.get(raw_granularity)
 
     @property
     def publisher(self) -> Union["Publisher", None]:
         """Name of the publisher of the dataset (str, read-only)."""
-        publisher_code = self.metadata.get("publisher", {}).get("code")
-        return self._client.get_publisher(code=publisher_code)
+        return self._client.get_publisher(code=self.metadata.get("publisher"))
 
     @property
-    def license(self) -> Union[str, None]:
+    def license(self) -> Union["License", None]:
         """License of the dataset (str, read-only)."""
-        return self.metadata.get("license")
+        return self._client.get(code=self.metadata.get("license"), kind="license")
 
     @property
-    def scope(self) -> Union[Dict[str, str], None]:
+    def scope(self) -> Union["Scope", None]:
         """Scope of the dataset (dict, read-only)."""
-        return _remove_and_copy(self.metadata.get("scope"), "icon")
+        return self._client.get(code=self.metadata.get("scope"), kind="scope")
 
     @property
-    def categories(self) -> Union[List[str], None]:
-        """Categories of the dataset (List[str], read-only)."""
-        return self.metadata.get("categories")
-
-    @property
-    def level(self) -> Union[Dict[str, str], None]:
+    def level(self) -> Union["DataLevel", None]:
         """Level of the dataset (dict, read-only)."""
-        return _remove_and_copy(self.metadata.get("level"), "icon")
+        return self._client.get(code=self.metadata.get("level"), kind="data-level")
 
-    def list_features(
+    def upload_file(
         self,
-        format: Literal["pandas", "json", "api"] = "pandas",
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
-        """List the features of the dataset.
-
-        Returns
-        -------
-        List[Feature]
-            List of features.
-
-        Examples
-        --------
-        >>>
-
-        Raises
-        ------
-        requests.exceptions.RequestException.
-            If the request fails due to an HTTP or Conection Error.
-        """
-        return self._client.list(kind="feature", dataset=self.code, format=format)
+        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        update: bool = False,
+    ) -> "File":
+        """Upload a file to the dataset."""
+        file = self.version.upload_file(
+            file=file, filetype=filetype, update=update)
+        return file
 
     def list_versions(
         self,
@@ -308,28 +304,6 @@ class Dataset(DatabaseResource):
             If the request fails due to an HTTP or Conection Error.
         """
         return self._client.list(kind="version", dataset=self.code, format=format)
-
-    def list_files(
-        self,
-        format: Literal["pandas", "json", "api"] = "pandas",
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["File"]]:
-        """List available versions of the dataset
-
-        Returns
-        -------
-        List[File]
-            List of features.
-
-        Examples
-        --------
-        >>>
-
-        Raises
-        ------
-        requests.exceptions.RequestException.
-            If the request fails due to an HTTP or Conection Error.
-        """
-        return self.version.list_files(format=format)
 
     def to_pandas(self) -> "pd.DataFrame":
         """Downloads the dataset as a pandas dataframe.
@@ -405,3 +379,116 @@ class Dataset(DatabaseResource):
             gdf = pd.concat(gdf_list)
 
         return gdf
+
+    def _check_value(self, key: str, value: Any) -> None:
+        """
+        Checks if the value is valid for the given key.
+        """
+        super()._check_value(key, value)
+
+        if key == 'granularity' or key == 'update_frequency':
+            if value and value not in GRANULARITY_TYPES.keys():
+                raise ValueError(
+                    f"Invalid {key}: {value}. Valid values are: {list(GRANULARITY_TYPES.keys())}")
+
+        if key == 'timestamp_column':
+            if value not in self.columns:
+                raise ValueError(
+                    f"Invalid {key}: {value}. Valid values are: {self.columns}")
+
+    def add_feature(self, feature: "Feature") -> None:
+        """Adds a feature to the dataset.
+
+        Parameters
+        ----------
+        feature : Feature
+            Feature to add to the dataset.
+
+        Examples
+        --------
+        >>>
+
+        Raises
+        ------
+        requests.exceptions.RequestException.
+            If the request fails due to an HTTP or Conection Error.
+        """
+
+        if feature.column is None:
+            raise ValueError(
+                "The feature must have a column associated with it.")
+
+        # Check if the feature is already in the dataset
+        columns = feature.columns
+        codes = [f.code for f in self.features]
+
+        if feature.code in codes:
+            raise ValueError(
+                f"The feature {feature.code} is already in the dataset.\n"
+                f"Update the feature previously added instead of adding a new one.\n"
+                f"Already added features: {codes}")
+        if feature.column in columns:
+            raise ValueError(
+                f"The column {feature.column} is already in the dataset.\n"
+                f"Update the feature previously added instead of adding a new one.\n"
+                f"U")
+
+        # Add the feature to the dataset
+        feature["dataset"] = self
+        self._features.append(feature)
+
+    def _save_subresources(self) -> None:
+        """
+        Save the feature.
+        """
+        super()._save_subresources()
+
+        # Save the license items
+        for feature in self.features:
+            feature.save()
+
+    def save(self) -> "Dataset":
+        super().save()
+        self._features = None
+
+    def upload_file(
+        self,
+        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        update: bool = False,
+    ):
+        """Uploads a file to the version.
+
+        Returns
+        -------
+        File
+            File object representing the uploaded file.
+        """
+        return self.version.upload_file(file=file, filetype=filetype, update=update)
+
+    def list_files(
+        self,
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        format: Literal["pandas", "json", "api"] = "pandas",
+    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["File"]]:
+        """Returns a list of files associated to the version.
+
+        Parameters
+        ----------
+        filetype : Optional[Literal["parquet", "geoparquet"]]
+            Type of file to filter. If None, all files are returned.
+        format: Literal["pandas", "json"]
+            Format of the returned list, either a list of dictionaries or a
+            pandas DataFrame.
+
+        Returns
+        -------
+        Literal["pandas", "json"]
+            List of files associated to the version.
+        """
+        return self.version.list_files(filetype=filetype, format=format)
+
+    def metadata_from_pandas(self, df: Union["pd.DataFrame", "gpd.GeoDataFrame"]) -> "Dataset":
+        from ..provider.provider_utils import metadata_from_pandas
+
+        return metadata_from_pandas(dataset=self, df=df)

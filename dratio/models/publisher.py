@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -24,26 +24,21 @@
 This module contains the Publisher class. A publisher is an data source 
 from which datasets are obtained.
 """
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
-try:  # Compatibility with Python 3.7
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
 
-from ..utils import _remove_and_copy
 from .base import DatabaseResource
+from .mixins import ListDatasetsMixin, ListFeaturesMixin, CategoryMixin, NameDescriptionMixin
 
 if TYPE_CHECKING:  # Pandas only as as type hint
-    import pandas as pd
+    from .tags import PusblisherType, Scope
+    from .license import License
 
-    from .dataset import Dataset
-    from .feature import Feature
 
 __all__ = ["Publisher"]
 
 
-class Publisher(DatabaseResource):
+class Publisher(DatabaseResource, ListDatasetsMixin, ListFeaturesMixin, CategoryMixin, NameDescriptionMixin):
     """
     Class to represent a publisher in the database.
     A publisher is an data source from which datasets are obtained.
@@ -84,6 +79,7 @@ class Publisher(DatabaseResource):
     """
 
     _URL = "publisher/"
+    _FILTER_KEYWORD = "publisher"
     _LIST_FIELDS = [
         "code",
         "name",
@@ -100,11 +96,6 @@ class Publisher(DatabaseResource):
         "publisher_type_name",
         "categories",
     ]
-
-    @property
-    def name(self) -> str:
-        """The name of the publisher (`str`, read-only)."""
-        return self.metadata.get("name")
 
     @property
     def url(self) -> Union[str, None]:
@@ -147,53 +138,19 @@ class Publisher(DatabaseResource):
         return self.metadata.get("last_data")
 
     @property
-    def scope(self) -> Union[Dict[str, str], None]:
+    def scope(self) -> Union["Scope", None]:
         """The scope of the publisher (`dict`, read-only)."""
-
-        return _remove_and_copy(self.metadata.get("scope"), "icon")
+        scope_code = self.metadata.get("scope")
+        return self._client.get(code=scope_code, kind="scope")
 
     @property
-    def publisher_type(self) -> Union[Dict[str, str], None]:
+    def publisher_type(self) -> Union["PusblisherType", None]:
         """The type of the publisher (`dict`, read-only)."""
+        publisher_code = self.metadata.get("publisher_type")
+        return self._client.get(code=publisher_code, kind="publisher-type")
 
-        return _remove_and_copy(self.metadata.get("publisher_type"), "icon")
-
-    def list_datasets(
-        self, format: Literal["pandas", "json", "api"] = "pandas"
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]:
-        """Returns a list of datasets associated to the publisher.
-
-        Arguments
-        ---------
-        format : str, optional
-            Format of the output. Either "pandas", "json" or "api". Defaults to "pandas".
-            If "pandas", the output is a pandas DataFrame. If "json", the output is a
-            list of dictionaries. If "api", the output is a list of Dataset objects.
-
-
-        Returns
-        -------
-        Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]
-            List of datasets associated to the publisher.
-        """
-
-        return self._client.list_datasets(publisher=self.code, format=format)
-
-    def list_features(
-        self, format: Literal["pandas", "json", "api"] = "pandas"
-    ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
-        """Returns a list of features associated to the publisher.
-
-        Arguments
-        ---------
-        format : str, optional
-            Format of the output. Either "pandas", "json" or "api". Defaults to "pandas".
-            If "pandas", the output is a pandas DataFrame. If "json", the output is a
-            list of dictionaries. If "api", the output is a list of Feature objects.
-
-        Returns
-        -------
-        Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]
-            List of features associated to the publisher.
-        """
-        return self._client.list_features(publisher=self.code, format=format)
+    @property
+    def license(self) -> Union["License", None]:
+        """The license of the publisher (`dict`, read-only)."""
+        license_code = self.metadata.get("license")
+        return self._client.get(code=license_code, kind="license")

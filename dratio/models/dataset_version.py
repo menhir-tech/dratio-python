@@ -1,5 +1,5 @@
 #
-# Copyright 2022 dratio.io. All rights reserved.
+# Copyright 2023 dratio.io. All rights reserved.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -30,19 +30,24 @@ try:  # Compatibility with Python 3.7
 except ImportError:
     from typing_extensions import Literal
 
+from .mixins import NameDescriptionMixin
 
 from .base import DatabaseResource
 
 if TYPE_CHECKING:  # Type hints
+    from pathlib import Path
+
     import pandas as pd
+    import geopandas as gpd
 
     from .dataset import Dataset
     from .dataset_file import File
 
+
 __all__ = ["Version"]
 
 
-class Version(DatabaseResource):
+class Version(DatabaseResource, NameDescriptionMixin):
     """Version of a dataset in the database
 
     Parameters
@@ -59,21 +64,42 @@ class Version(DatabaseResource):
     _URL = "version/"
 
     @property
-    def name(self) -> Union[str, None]:
-        """Name of the version"""
-        return self.metadata.get("name")
-
-    @property
-    def description(self) -> Union[str, None]:
-        """Description of the version"""
-        return self.metadata.get("description")
-
-    @property
     def dataset(self) -> "Dataset":
         """Dataset to which the version belongs"""
 
         dataset_code = self.metadata.get("dataset", {}).get("code")
         return self._client.get_dataset(code=dataset_code)
+
+    def upload_file(
+        self,
+        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
+        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
+        update: bool = False,
+    ):
+        """Uploads a file to the version.
+
+        Returns
+        -------
+        File
+            File object representing the uploaded file.
+        """
+        from ..provider.file_upload import _infer_filetype, _upload_file
+        url = f"{self._URL}{self.code}/upload/"
+        filetype = _infer_filetype(file, filetype)
+
+        content = self._client._perform_request(
+            url, method="POST", json={"update": update, "filetype": filetype}
+        ).json()
+
+        url = content["url"]
+        file_code = content["code"]
+        
+        _upload_file(file=file, filetype=filetype, url=url)
+
+        new_file = self._client.get_file(code=file_code)
+        new_file._update_availability()
+
+        return new_file
 
     def list_files(
         self,

@@ -71,3 +71,8 @@ class ObjectNotFound(DratioException):
         else:
             message = f"{name} with code {code} not found"
         super().__init__(message)
+
+class InvalidRequest(DratioException):
+    """
+    Invalid Request
+    """

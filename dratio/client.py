@@ -37,17 +37,16 @@ import warnings
 import requests
 from requests.compat import urljoin
 
-from .__version__ import __version__
-from .resources import Dataset, Feature, File, Publisher, Version
-from .resources.category import (Category, DataLevel, PusblisherType, Scope,
-                                 Unit)
-from .resources.license import License, LicenseItem
-from .utils import _get_params_from_kwargs, _warn_param_used
+from .models import (Category, DataLevel, Dataset, Feature, File, License,
+                     LicenseItem, Publisher, PusblisherType, Scope, Unit,
+                     Version)
+from .utils import (_get_params_from_kwargs, _raise_client_exception,
+                    _warn_param_used, get_version)
 
 if TYPE_CHECKING:
     import pandas as pd
 
-    from .resources.base import DatabaseResource
+    from .models.base import DatabaseResource
 
 
 __all__ = ["Client"]
@@ -125,14 +124,15 @@ class Client:
     """
 
     BASE_URL = "https://api.dratio.io/api/"
+    USE_PERSISTENT_SESSION: bool = True
     _KEY_REGEX = r"^[a-z0-9]{64}$"
 
     _CLASSES_MAPPING = CLASSES_MAPPING
 
-    def __init__(self, key: str, *, persistent_session: bool = True) -> "Client":
+    def __init__(self, key: str, base_url: Optional[str] = None) -> "Client":
         """Initializes the Client object"""
-        self._base_url = Client.BASE_URL
-        self.persistent_session = persistent_session
+        self._base_url = base_url or Client.BASE_URL
+        self.persistent_session = Client.USE_PERSISTENT_SESSION
         self._current_session = None
         self.key = key
         self._compatibility_checked = False
@@ -160,8 +160,8 @@ class Client:
         """Checks that the client is compatible with the API version"""
 
         info = self.info()
-
-        if info["client_version"] not in info.get("client_compatibility", []):
+        __version__ = info["client_version"]
+        if __version__ not in info.get("client_compatibility", []):
             warnings.warn(
                 f"The client version ({__version__}) is not compatible with the "
                 f"API version ({info['version']}).\nPlease, update the client "
@@ -219,7 +219,11 @@ class Client:
         return session
 
     def _perform_request(
-        self, url: str, allowed_status: List[int] = [], **kwargs
+        self,
+        url: str,
+        allowed_status: List[int] = [],
+        method: Literal["GET", "POST", "PUT", "PATCH"] = "GET",
+        **kwargs,
     ) -> requests.Response:
         """Performs a request to the API.
 
@@ -251,10 +255,10 @@ class Client:
 
         url = urljoin(self._base_url, url)
 
-        response = self._session.get(url=url, **kwargs)
+        response = self._session.request(method=method, url=url, **kwargs)
 
         if response.status_code not in allowed_status:
-            response.raise_for_status()
+            _raise_client_exception(response)
 
         return response
 
@@ -273,7 +277,7 @@ class Client:
         >>> from dratio import Client
         >>> client = Client('Your API key')
         >>> client.info()
-        {{'version': '0.0.1', 'client_version': '{__version__}', ...}}
+        {{'version': '0.0.1', 'client_version': '0.0.11', ...}}
 
         """
         response = self._perform_request(url="")
@@ -281,7 +285,7 @@ class Client:
 
         # Add client version to the response
         info_data = response.json()
-        info_data["client_version"] = __version__
+        info_data["client_version"] = get_version()
 
         return info_data
 
@@ -516,6 +520,7 @@ class Client:
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
         publisher: Optional[str] = None,
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Dataset"]]:
         """Returns a dataframe or a list with information of the datasets available in the dratio.io marketplace.
 
@@ -554,13 +559,14 @@ class Client:
 
 
         """
-        return self.list(kind="dataset", format=format, publisher=publisher)
+        return self.list(kind="dataset", format=format, publisher=publisher, license=license)
 
     def list_features(
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
         dataset: Optional[str] = None,
         publisher: Optional[str] = None,
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Feature"]]:
         """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
 
@@ -593,12 +599,13 @@ class Client:
         """
 
         return self.list(
-            kind="feature", format=format, dataset=dataset, publisher=publisher
+            kind="feature", format=format, dataset=dataset, publisher=publisher, license=license
         )
 
     def list_publishers(
         self,
         format: Literal["pandas", "json", "api"] = "pandas",
+        license: Optional[str] = None,
     ) -> Union["pd.DataFrame", List[Dict[str, Any]], List["Publisher"]]:
         """Returns a dataframe or a list with information of the features available in the dratio.io marketplace.
 
@@ -630,4 +637,4 @@ class Client:
 
         """
 
-        return self.list(kind="publisher", format=format)
+        return self.list(kind="publisher", format=format, license=license)
