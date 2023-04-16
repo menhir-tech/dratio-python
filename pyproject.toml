@@ -69,8 +69,8 @@ repository = "https://github.com/dratio-io/dratio-python"
 documentation = "https://dratio.readthedocs.io/"
 
 
-[tool.setuptools]
-packages = ["dratio"]
+[tool.setuptools.packages.find]
+include = ["dratio*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "dratio.__version__"}
