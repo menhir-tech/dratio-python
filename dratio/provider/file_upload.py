@@ -26,11 +26,12 @@ Functionalities to manage file uploads
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryFile
-from typing import TYPE_CHECKING, BinaryIO, Literal, Optional, Union
+from typing import TYPE_CHECKING, BinaryIO, Optional, Union
 
 import geopandas as gpd
 import pandas as pd
 import requests
+
 
 __all__ = ["_infer_filetype", "_upload_file"]
 

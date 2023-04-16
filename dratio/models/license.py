@@ -24,10 +24,15 @@
 This module contains the license and license item classes.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 from .mixins import NameDescriptionMixin, ListDatasetsMixin, ListFeaturesMixin, ListPublisherMixin
 
 from .base import DatabaseResource
+
+try: # Compatibility with Python 3.7
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 if TYPE_CHECKING:
     import pandas as pd

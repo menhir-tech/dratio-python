@@ -25,7 +25,7 @@ This module contains abstract classes to be used as mixins in the
 models.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -33,6 +33,11 @@ if TYPE_CHECKING:
     from .dataset import Dataset
     from .publisher import Publisher
     from .tags import Category
+
+try:  #  Compatibility with Python 3.7
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 
 class ListFeaturesMixin:
@@ -248,4 +253,3 @@ class NameDescriptionMixin:
     def description(self) -> str:
         """Returns the description of the object."""
         return self.metadata.get("description", "")
-
