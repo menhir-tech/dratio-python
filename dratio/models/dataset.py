@@ -49,24 +49,24 @@ if TYPE_CHECKING:
 
 
 GRANULARITY_TYPES = {
-    'without': 'Without periodicity',
-    'custom': 'Custom',
-    'quinquennial': 'Quinquennial (Every 5 years)',
-    'quadrennial': 'Quadrennial (Every 4 years)',
-    'triennial': 'Triennial (every 3 years)',
-    'biennial': 'Biennial (every 2 years)',
-    'annual': 'Annual',
-    'semiannual': 'Semiannual (every 6 months)',
-    '4monthly': 'Every four months',
-    'quarterly': 'Quarterly (every 3 months)',
-    'every2months': 'Every two months',
-    'Monthly': 'Monthly',
-    'twicemonthly': 'Twice a month',
-    'weekly': 'Weekly',
-    'daily': 'Daily',
-    'dailybusiness': 'Daily Businness',
-    'hourly': 'Every hour',
-    'everyminute': 'Every minute',
+    "without": "Without periodicity",
+    "custom": "Custom",
+    "quinquennial": "Quinquennial (Every 5 years)",
+    "quadrennial": "Quadrennial (Every 4 years)",
+    "triennial": "Triennial (every 3 years)",
+    "biennial": "Biennial (every 2 years)",
+    "annual": "Annual",
+    "semiannual": "Semiannual (every 6 months)",
+    "4monthly": "Every four months",
+    "quarterly": "Quarterly (every 3 months)",
+    "every2months": "Every two months",
+    "Monthly": "Monthly",
+    "twicemonthly": "Twice a month",
+    "weekly": "Weekly",
+    "daily": "Daily",
+    "dailybusiness": "Daily Businness",
+    "hourly": "Every hour",
+    "everyminute": "Every minute",
 }
 
 __all__ = ["Dataset"]
@@ -132,32 +132,55 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
 
     # Fields to be included in the list of datasets as a pandas dataframe
     _LIST_FIELDS = [
-        "code", "name", "dataset_type",
-        "last_update", "n_values",
-        "start_data", "last_data",
-        "granularity", "scope_code",
-        "scope_name", "level_code",
-        "level_name", "publisher_code",
-        "publisher_name", "categories"]
+        "code",
+        "name",
+        "dataset_type",
+        "last_update",
+        "n_values",
+        "start_data",
+        "last_data",
+        "granularity",
+        "scope_code",
+        "scope_name",
+        "level_code",
+        "level_name",
+        "publisher_code",
+        "publisher_name",
+        "categories",
+    ]
 
-    _EDITABLE_FIELDS = ['code', 'name',
-                        'name_es', 'is_public',
-                        'description', 'description_es',
-                        'order', 'last_update',
-                        'preview', 'timestamp_column',
-                        'start_data', 'last_data',
-                        'n_time_slices', 'n_values',
-                        'n_variables', 'n_features',
-                        'next_update', 'update_frequency',
-                        'granularity', 'categories',
-                        'level', "license", "scope"]
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "name_es",
+        "is_public",
+        "description",
+        "description_es",
+        "order",
+        "last_update",
+        "preview",
+        "timestamp_column",
+        "start_data",
+        "last_data",
+        "n_time_slices",
+        "n_values",
+        "n_variables",
+        "n_features",
+        "next_update",
+        "update_frequency",
+        "granularity",
+        "categories",
+        "level",
+        "license",
+        "scope",
+        "publisher",
+    ]
 
     def __init__(self, client, code: str, version: Optional[str] = None):
         """Initializes the Dataset object"""
         super().__init__(code=code, client=client)
         if version is not None:
-            raise NotImplementedError(
-                "Version selection is not implemented yet")
+            raise NotImplementedError("Version selection is not implemented yet")
 
         self._version_code = version
         self._version = None
@@ -168,8 +191,10 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         """Dictionary with features indexed by column name (Dict[str, Feature], read-only)."""
 
         if self._features is None:
-            self._features = [self._client.get_feature(
-                code=code) for code in self.metadata.get("feature_set")]
+            self._features = [
+                self._client.get_feature(code=code)
+                for code in self.metadata.get("feature_set")
+            ]
 
         return self._features
 
@@ -177,7 +202,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
     def columns(self) -> List[str]:
         """Return a list with all the columns of the dataset (List[str], read-only)."""
         cols = [f.column for f in self.features]
-        # Filter none values
+        # Filter none values
         return [c for c in cols if c is not None]
 
     @property
@@ -279,8 +304,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         update: bool = False,
     ) -> "File":
         """Upload a file to the dataset."""
-        file = self.version.upload_file(
-            file=file, filetype=filetype, update=update)
+        file = self.version.upload_file(file=file, filetype=filetype, update=update)
         return file
 
     def list_versions(
@@ -386,15 +410,17 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         """
         super()._check_value(key, value)
 
-        if key == 'granularity' or key == 'update_frequency':
+        if key == "granularity" or key == "update_frequency":
             if value and value not in GRANULARITY_TYPES.keys():
                 raise ValueError(
-                    f"Invalid {key}: {value}. Valid values are: {list(GRANULARITY_TYPES.keys())}")
+                    f"Invalid {key}: {value}. Valid values are: {list(GRANULARITY_TYPES.keys())}"
+                )
 
-        if key == 'timestamp_column':
+        if key == "timestamp_column":
             if value not in self.columns:
                 raise ValueError(
-                    f"Invalid {key}: {value}. Valid values are: {self.columns}")
+                    f"Invalid {key}: {value}. Valid values are: {self.columns}"
+                )
 
     def add_feature(self, feature: "Feature") -> None:
         """Adds a feature to the dataset.
@@ -415,26 +441,32 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         """
 
         if feature.column is None:
-            raise ValueError(
-                "The feature must have a column associated with it.")
+            raise ValueError("The feature must have a column associated with it.")
 
-        # Check if the feature is already in the dataset
-        columns = feature.columns
-        codes = [f.code for f in self.features]
+        if self._exists:
+            # Check if the feature is already in the dataset
+            columns = self.columns
+            codes = [f.code for f in self.features]
 
-        if feature.code in codes:
-            raise ValueError(
-                f"The feature {feature.code} is already in the dataset.\n"
-                f"Update the feature previously added instead of adding a new one.\n"
-                f"Already added features: {codes}")
-        if feature.column in columns:
-            raise ValueError(
-                f"The column {feature.column} is already in the dataset.\n"
-                f"Update the feature previously added instead of adding a new one.\n"
-                f"U")
+            if feature.code in codes:
+                raise ValueError(
+                    f"The feature {feature.code} is already in the dataset.\n"
+                    f"Update the feature previously added instead of adding a new one.\n"
+                    f"Already added features: {codes}"
+                )
+            if feature.column in columns:
+                raise ValueError(
+                    f"The column {feature.column} is already in the dataset.\n"
+                    f"Update the feature previously added instead of adding a new one.\n"
+                    f"U"
+                )
 
         # Add the feature to the dataset
         feature["dataset"] = self
+
+        # Case new dataset and first feature
+        if self._features is None:
+            self._features = []
         self._features.append(feature)
 
     def _save_subresources(self) -> None:
@@ -443,13 +475,13 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         """
         super()._save_subresources()
 
-        # Save the license items
+        # Save the license items
         for feature in self.features:
             feature.save()
 
     def save(self) -> "Dataset":
         super().save()
-        self._features = None
+        #self._features = None
 
     def upload_file(
         self,
@@ -488,7 +520,39 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         """
         return self.version.list_files(filetype=filetype, format=format)
 
-    def metadata_from_pandas(self, df: Union["pd.DataFrame", "gpd.GeoDataFrame"]) -> "Dataset":
+    def metadata_from_pandas(
+        self,
+        df: Union["pd.DataFrame", "gpd.GeoDataFrame"],
+        publisher: Union[str, "Publisher"],
+        license: Optional[Union[str, "License"]] = None,
+        timestamp_column: str = "timestamp",
+    ) -> "Dataset":
+        """Automatically generates the metadata of the dataset from a pandas dataframe.
+        This method is useful to create a dataset from a pandas dataframe, and is
+        intended to be used for data providers that want to upload their data to dratio.io.
+
+        Parameters
+        ----------
+        df : Union[pandas.DataFrame, geopandas.GeoDataFrame]
+            Pandas dataframe with the data.
+        publisher : Union[str, Publisher]
+            Publisher of the dataset.
+        license : Optional[Union[str, License]]
+            License of the dataset.
+        timestamp_column : str
+            Name of the column used as timestamp (if applicable).
+
+        Returns
+        -------
+        Dataset
+            Dataset object with the metadata generated from the pandas dataframe.
+        """
         from ..provider.provider_utils import metadata_from_pandas
 
-        return metadata_from_pandas(dataset=self, df=df)
+        return metadata_from_pandas(
+            dataset=self,
+            df=df,
+            publisher=publisher,
+            license=license,
+            timestamp_column=timestamp_column,
+        )

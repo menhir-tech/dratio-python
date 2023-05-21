@@ -81,7 +81,7 @@ class DatabaseResource:
         self.code = code
         self._client = client
         self._fetched = False
-        self._metadata = kwargs
+        self._metadata = {"code": code, **kwargs}
         self._exists = None
 
     def __repr__(self) -> str:
@@ -127,7 +127,7 @@ class DatabaseResource:
                 self.fetch(fail_not_found=False)
 
             # Objects are referenced by their code
-            if hasattr(value, 'code'):
+            if hasattr(value, "code"):
                 value = value.code
 
             # Check value
@@ -216,6 +216,12 @@ class DatabaseResource:
         )
 
         return data
+    
+    def keys(self) -> List[str]:
+        """
+        Returns the keys of the metadata dictionary.
+        """
+        return list(self.metadata.keys())
 
     def _save_subresources(self) -> None:
         """Saves the subresources of the object."""
@@ -248,9 +254,8 @@ class DatabaseResource:
             self._metadata["code"] = self.code
             method = "POST"
 
-        self._client._perform_request(
-            relative_url, method=method, json=self.metadata
-        )
+        self._client._perform_request(relative_url, method=method, json=self.metadata)
+        self._save_subresources()
         self.fetch(fail_not_found=True)
 
     def delete(self) -> None:
