@@ -27,6 +27,7 @@ import json
 import re
 from typing import TYPE_CHECKING, Optional, Union
 
+
 import pandas as pd
 
 try:
@@ -69,14 +70,19 @@ def metadata_from_pandas(
     with the information from the dataframe.
 
     """
-
+    dataset["publisher"] = publisher
+    license = license or dataset.license
+    if license is not None:
+        dataset["license"] = license
     if isinstance(publisher, str):
         publisher = dataset._client.get_publisher(publisher)
 
     has_geom = isinstance(df, gpd.GeoDataFrame)
     has_timestamp = timestamp_column in df.columns
     if has_geom:
-        geo_feature = geometry_column_feature(df, "geometry", order=len(df.columns))
+        geo_feature = geometry_column_feature(
+            dataset=dataset, gdf=df, order=len(df.columns), column_name="geometry"
+        )
         df = pd.DataFrame(df.drop(columns=["geometry"]))
 
     for order, column in enumerate(df.columns):
@@ -211,7 +217,7 @@ def infer_feature_type(column: "pd.Series") -> Union[str, None]:
     elif data_type == "int":
         return "number"
 
-    return None
+    return "cat"
 
 
 def column_feature(

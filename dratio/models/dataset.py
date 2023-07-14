@@ -24,6 +24,7 @@
 This module contains the dataset class.
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from warnings import warn
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
@@ -449,17 +450,19 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
             codes = [f.code for f in self.features]
 
             if feature.code in codes:
-                raise ValueError(
+                warn(
                     f"The feature {feature.code} is already in the dataset.\n"
                     f"Update the feature previously added instead of adding a new one.\n"
                     f"Already added features: {codes}"
                 )
+                return
             if feature.column in columns:
-                raise ValueError(
+                warn(
                     f"The column {feature.column} is already in the dataset.\n"
                     f"Update the feature previously added instead of adding a new one.\n"
                     f"U"
                 )
+                return
 
         # Add the feature to the dataset
         feature["dataset"] = self
@@ -481,7 +484,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
 
     def save(self) -> "Dataset":
         super().save()
-        #self._features = None
+        # self._features = None
 
     def upload_file(
         self,

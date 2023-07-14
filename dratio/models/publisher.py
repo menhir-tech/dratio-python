@@ -28,7 +28,12 @@ from typing import TYPE_CHECKING, Dict, List, Union
 
 
 from .base import DatabaseResource
-from .mixins import ListDatasetsMixin, ListFeaturesMixin, CategoryMixin, NameDescriptionMixin
+from .mixins import (
+    ListDatasetsMixin,
+    ListFeaturesMixin,
+    CategoryMixin,
+    NameDescriptionMixin,
+)
 
 if TYPE_CHECKING:  # Pandas only as as type hint
     from .tags import PusblisherType, Scope
@@ -38,7 +43,13 @@ if TYPE_CHECKING:  # Pandas only as as type hint
 __all__ = ["Publisher"]
 
 
-class Publisher(DatabaseResource, ListDatasetsMixin, ListFeaturesMixin, CategoryMixin, NameDescriptionMixin):
+class Publisher(
+    DatabaseResource,
+    ListDatasetsMixin,
+    ListFeaturesMixin,
+    CategoryMixin,
+    NameDescriptionMixin,
+):
     """
     Class to represent a publisher in the database.
     A publisher is an data source from which datasets are obtained.
@@ -95,6 +106,24 @@ class Publisher(DatabaseResource, ListDatasetsMixin, ListFeaturesMixin, Category
         "publisher_type_code",
         "publisher_type_name",
         "categories",
+    ]
+    _EDITABLE_FIELDS = [
+        "code",
+        "name",
+        "is_public",
+        "scope",
+        "license",
+        "order",
+        "last_update",
+        "description",
+        "categories",
+        "url",
+        "n_datasets",
+        "n_variables",
+        "n_features",
+        "publisher_type",
+        "start_data",
+        "last_data",
     ]
 
     @property

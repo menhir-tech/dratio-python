@@ -150,7 +150,7 @@ class Feature(DatabaseResource, NameDescriptionMixin, CategoryMixin):
         "name_es",
         "description_es",
         "reference_feature",
-        
+        "crs",
     ]
 
     @property
