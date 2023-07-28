@@ -24,6 +24,7 @@
 This module contains the dataset class.
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from warnings import warn
 
 try:  # Compatibility with Python 3.7
     from typing import Literal
@@ -174,6 +175,8 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         "license",
         "scope",
         "publisher",
+        "related_datasets",
+        "dataset_documentation",
     ]
 
     def __init__(self, client, code: str, version: Optional[str] = None):
@@ -365,7 +368,68 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
 
         return df
 
-    def to_geopandas(self) -> "gpd.GeoDataFrame":
+    def _available_crosses(self, geometries: bool = False) -> List["Feature"]:
+        """List available crosses of the dataset.
+
+        Parameters
+        ----------
+        geometries : bool, optional
+            Whether to include only crosses with geometries, by default False.
+
+        Returns
+        -------
+        List[Feature]
+            List of features.
+        """
+
+        available_crosses = [
+            d for d in self.features if d.reference_feature is not None
+        ]
+
+        if geometries:
+            available_crosses = [
+                d for d in available_crosses if d.reference._has_geometries()
+            ]
+
+        return available_crosses
+
+    def _has_geometries(self) -> bool:
+        """Checks if the dataset has geometries.
+
+        Returns
+        -------
+        bool
+            True if the dataset has geometries, False otherwise.
+
+        """
+        geometric_files = self.version.list_files(filetype="geoparquet", format="api")
+        return len(geometric_files) > 0
+
+    def _select_cross(self, available_crosses: List["Feature"]):
+        """Selects the best cross to use for the dataset.
+
+        Parameters
+        ----------
+        available_crosses : List[Feature]
+            List of available crosses.
+
+        Returns
+        -------
+        Feature
+            The best cross to use for the dataset.
+        """
+        if not len(available_crosses):
+            return None
+        if len(available_crosses) == 1:
+            return available_crosses[0]
+
+        cardinality = [a.reference.n_values for a in available_crosses]
+        # computes the argmax of the cardinality (python pure, not numpy)
+        max_cardinality = max(cardinality)
+        max_cardinality_index = cardinality.index(max_cardinality)
+        return available_crosses[max_cardinality_index]
+
+    def to_geopandas(self, cross_strategy: str = "auto") -> "gpd.GeoDataFrame":
         """Downloads the dataset as a geopandas geodataframe.
 
         Returns
@@ -384,15 +448,32 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         requests.exceptions.RequestException.
             If the request fails due to an HTTP or Conection Error.
         """
+        import geopandas as gpd
 
         files = self.version.list_files(filetype="geoparquet", format="api")
 
         if not files:
-            raise ObjectNotFound(
-                "There are no available files with geometries for this dataset. "
-                "Has this dataset been geocoded?"
-                "Use `dataset.version.list_files()` to see the available files for this version."
-            )
+            available_crosses = self._available_crosses(geometries=True)
+            if not len(available_crosses) or cross_strategy != "auto":
+                raise ObjectNotFound(
+                    "There are no available files with geometries for this dataset. "
+                    "Has this dataset been geocoded? "
+                    "Use `dataset.version.list_files()` to see the available files for this version."
+                )
+            selected_cross = self._select_cross(available_crosses)
+            self_column = selected_cross.column
+            other_column = selected_cross.reference_feature.column
+
+            df = self.to_pandas()
+            gdf = selected_cross.reference.to_geopandas(
+                cross_strategy="none"
+            )  # Avoid recursion
+
+            # Remove other columns of gdf
+            gdf = gdf[[other_column, "geometry"]]
+            gdf = df.merge(gdf, left_on=self_column, right_on=other_column, how="left")
+            gdf = gpd.GeoDataFrame(gdf, geometry="geometry")
+            return gdf
 
         gdf_list = []
         for file in files:
@@ -449,17 +530,19 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
             codes = [f.code for f in self.features]
 
             if feature.code in codes:
-                raise ValueError(
+                warn(
                     f"The feature {feature.code} is already in the dataset.\n"
                     f"Update the feature previously added instead of adding a new one.\n"
                     f"Already added features: {codes}"
                 )
+                return
             if feature.column in columns:
-                raise ValueError(
+                warn(
                     f"The column {feature.column} is already in the dataset.\n"
                     f"Update the feature previously added instead of adding a new one.\n"
                     f"U"
                 )
+                return
 
         # Add the feature to the dataset
         feature["dataset"] = self
@@ -481,7 +564,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
 
     def save(self) -> "Dataset":
         super().save()
-        #self._features = None
+        # self._features = None
 
     def upload_file(
         self,

@@ -216,7 +216,7 @@ class DatabaseResource:
         )
 
         return data
-    
+
     def keys(self) -> List[str]:
         """
         Returns the keys of the metadata dictionary.
@@ -271,3 +271,27 @@ class DatabaseResource:
         relative_url = f"{self._URL}/{self.code}/"
         self._client._perform_request(relative_url, method="DELETE")
         self._exists = False
+
+    def from_dict(self, metadata):
+        """
+        Updates the internal state of the object with the provided metadata.
+
+        Parameters
+        ----------
+        metadata : dict
+            Dictionary containing the metadata of the object.
+
+        Returns
+        -------
+        self : DatabaseResource
+            The object itself.
+
+        Notes
+        -----
+        This method modifies the object's internal state.
+        """
+
+        for key, value in metadata.items():
+            self[key] = value
+
+        return self

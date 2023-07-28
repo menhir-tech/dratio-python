@@ -25,6 +25,7 @@ Functionalities to help with the creation of datasets
 """
 import json
 import re
+import warnings
 from typing import TYPE_CHECKING, Optional, Union
 
 import pandas as pd
@@ -69,27 +70,34 @@ def metadata_from_pandas(
     with the information from the dataframe.
 
     """
-
+    dataset["publisher"] = publisher
+    license = license or dataset.license
+    if license is not None:
+        dataset["license"] = license
     if isinstance(publisher, str):
         publisher = dataset._client.get_publisher(publisher)
 
     has_geom = isinstance(df, gpd.GeoDataFrame)
     has_timestamp = timestamp_column in df.columns
     if has_geom:
-        geo_feature = geometry_column_feature(df, "geometry", order=len(df.columns))
-        df = pd.DataFrame(df.drop(columns=["geometry"]))
-
-    for order, column in enumerate(df.columns):
-        feature = column_feature(
-            dataset=dataset, column=df[column], column_name=column, order=order + 1
+        geo_feature = geometry_column_feature(
+            dataset=dataset, gdf=df, order=len(df.columns), column_name="geometry"
         )
-        dataset.add_feature(feature)
+        df = pd.DataFrame(df.drop(columns=["geometry"]))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    preview = extract_table_preview(df)
+        for order, column in enumerate(df.columns):
+            feature = column_feature(
+                dataset=dataset, column=df[column], column_name=column, order=order + 1
+            )
+            dataset.add_feature(feature)
 
-    if has_geom:
-        preview["geometry"] = "<geometry>"
-        dataset.add_feature(geo_feature)
+        preview = extract_table_preview(df)
+
+        if has_geom:
+            preview["geometry"] = "<geometry>"
+            dataset.add_feature(geo_feature)
 
     dataset["preview"] = json.loads(preview.to_json(orient="records"))
 
@@ -211,7 +219,7 @@ def infer_feature_type(column: "pd.Series") -> Union[str, None]:
     elif data_type == "int":
         return "number"
 
-    return None
+    return "cat"
 
 
 def column_feature(
