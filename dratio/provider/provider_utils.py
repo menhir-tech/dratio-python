@@ -25,8 +25,8 @@ Functionalities to help with the creation of datasets
 """
 import json
 import re
+import warnings
 from typing import TYPE_CHECKING, Optional, Union
-
 
 import pandas as pd
 
@@ -84,18 +84,20 @@ def metadata_from_pandas(
             dataset=dataset, gdf=df, order=len(df.columns), column_name="geometry"
         )
         df = pd.DataFrame(df.drop(columns=["geometry"]))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    for order, column in enumerate(df.columns):
-        feature = column_feature(
-            dataset=dataset, column=df[column], column_name=column, order=order + 1
-        )
-        dataset.add_feature(feature)
+        for order, column in enumerate(df.columns):
+            feature = column_feature(
+                dataset=dataset, column=df[column], column_name=column, order=order + 1
+            )
+            dataset.add_feature(feature)
 
-    preview = extract_table_preview(df)
+        preview = extract_table_preview(df)
 
-    if has_geom:
-        preview["geometry"] = "<geometry>"
-        dataset.add_feature(geo_feature)
+        if has_geom:
+            preview["geometry"] = "<geometry>"
+            dataset.add_feature(geo_feature)
 
     dataset["preview"] = json.loads(preview.to_json(orient="records"))
 
