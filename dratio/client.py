@@ -33,15 +33,31 @@ except ImportError:
 
 import re
 import warnings
+import os
 
 import requests
 from requests.compat import urljoin
 
-from .models import (Category, DataLevel, Dataset, Feature, File, License,
-                     LicenseItem, Publisher, PusblisherType, Scope, Unit,
-                     Version)
-from .utils import (_get_params_from_kwargs, _raise_client_exception,
-                    _warn_param_used, get_version)
+from .models import (
+    Category,
+    DataLevel,
+    Dataset,
+    Feature,
+    File,
+    License,
+    LicenseItem,
+    Publisher,
+    PusblisherType,
+    Scope,
+    Unit,
+    Version,
+)
+from .utils import (
+    _get_params_from_kwargs,
+    _raise_client_exception,
+    _warn_param_used,
+    get_version,
+)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -87,13 +103,22 @@ class Client:
 
     Parameters
     ----------
-    key : str
+    key : str, optional
         API key to access dratio.io API. You can obtain your API key at
         https://dratio.io/app/api/. Please, keep this key in a safe place.
-    persistent_session : bool, optional
-        Whether to use a persistent session to perform requests to the API.
-        Defaults to True.
-
+        If not specified, the key is read from the environment variable with
+        name defined in `env_name`.
+    env_name : str, optional
+        Name of the environment variable where the API key is stored. Only used
+        if `key` is not specified. Defaults to 'DRATIO_KEY'.
+    base_url: str, optional
+        Base URL of the dratio.io API. Defaults to 'https://api.dratio.io/api/'.
+        Parameter used for custom deployments of dratio.io.
+    use_persistent_session: bool, optional
+        If True, the client will use a persistent session to perform requests
+        to the API. This is useful to reuse the same connection for multiple
+        requests. Defaults to True. If False, a new session is created for each
+        request (for advanced use cases).
 
     Examples
     --------
@@ -124,28 +149,33 @@ class Client:
     """
 
     BASE_URL = "https://api.dratio.io/api/"
-    USE_PERSISTENT_SESSION: bool = True
     _KEY_REGEX = r"^[a-z0-9]{64}$"
 
     _CLASSES_MAPPING = CLASSES_MAPPING
 
-    def __init__(self, key: str, base_url: Optional[str] = None) -> "Client":
+    def __init__(
+        self,
+        key: Optional[str] = None,
+        env_name: str = "DRATIO_KEY",
+        base_url: Optional[str] = None,
+        use_persistent_session: bool = True,
+    ) -> "Client":
         """Initializes the Client object"""
         self._base_url = base_url or Client.BASE_URL
-        self.persistent_session = Client.USE_PERSISTENT_SESSION
+        self.persistent_session = (use_persistent_session,)
         self._current_session = None
-        self.key = key
+        self.key = self._check_key(key, env_name)
         self._compatibility_checked = False
-
-        # Offline check of the format of the API key
-        self._check_key(key)
 
     def __repr__(self) -> str:
         """Represents Client object as a string"""
         return f"Client('{self.key[:6]}...')"
 
-    def _check_key(self, key: str) -> None:
+    def _check_key(self, key: Optional[str], env_name: str) -> str:
         """Checks that the API key is not empty"""
+        if key is None:
+            key = os.environ.get(env_name)
+
         if not isinstance(key, str):
             raise TypeError(f"key must be a string, not {type(key)}.")
 
@@ -155,6 +185,8 @@ class Client:
                 "Are you sure you are using a correct key?\n"
                 "You can obtain a new API key at https://dratio.io/app/api/."
             )
+
+        return key
 
     def _check_client_compatibility(self) -> None:
         """Checks that the client is compatible with the API version"""
@@ -559,7 +591,9 @@ class Client:
 
 
         """
-        return self.list(kind="dataset", format=format, publisher=publisher, license=license)
+        return self.list(
+            kind="dataset", format=format, publisher=publisher, license=license
+        )
 
     def list_features(
         self,
@@ -599,7 +633,11 @@ class Client:
         """
 
         return self.list(
-            kind="feature", format=format, dataset=dataset, publisher=publisher, license=license
+            kind="feature",
+            format=format,
+            dataset=dataset,
+            publisher=publisher,
+            license=license,
         )
 
     def list_publishers(

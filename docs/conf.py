@@ -3,13 +3,13 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-
 import os
 import sys
 import pkg_resources
 
 sys.path.append(os.path.abspath("../.."))
 sys.path.append(os.path.abspath(".."))
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -28,12 +28,10 @@ project = "dratio"
 copyright = "2023, dratio.io"
 author = "dratio.io"
 
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    # "sphinx_rtd_theme",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
@@ -59,7 +57,6 @@ autodoc_mock_imports = ["geopandas"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
-# html_static_path = ['_static']
 html_favicon = "https://dratio.io/favicon/favicon.ico"
 html_logo = "https://dratio.io/branding/logo.png"
 html_theme_options = {
@@ -83,10 +80,7 @@ html_theme_options = {
         "image_light": html_logo,
         "image_dark": "https://dratio.io/branding/logo-full-dark.png",
     },
-    # 'style_nav_header_background': '#FDFDFD',
-    #'logo_only': True,
 }
-
 html_context = {
     "github_user": "dratio-io",
     "github_repo": "dratio-python",

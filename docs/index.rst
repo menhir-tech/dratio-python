@@ -48,7 +48,7 @@ to reference directly with your data without spending time on integration.
 Installation
 ------------
 
-Currently, dratio's client is available in Python 3.7 to 3.10, regardless of the platform. 
+Currently, dratio's client is available in Python 3.7 to 3.11, regardless of the platform. 
 The stable version can be installed via `PyPI <https://pypi.org/project/dratio/>`_.
 
 .. code-block:: bash
@@ -86,7 +86,11 @@ The :class:`Client <dratio.Client>` class allows you to access all API resources
 
    from dratio import Client
 
-   client = Client('<your_api_key>')
+   client = Client('Your API key')
+
+.. note::
+   Pro Tip! You can define the key in the environment variable ``DRATIO_KEY`` and
+   simple create the client without passing the key as a parameter: ``client = Client()``.
 
 
 Basic functionalities allow you to search and filter datasets available for download.
