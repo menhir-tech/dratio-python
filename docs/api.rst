@@ -20,7 +20,7 @@ the rest of the objects of the package.
 All the elements of the database are represented as a class, 
 to allow access to the information in a transparent way.
 
-.. currentmodule:: dratio.base
+.. currentmodule:: dratio.models
 
 .. autosummary::
     :toctree: _autosummary
