@@ -64,7 +64,7 @@ geo = [
 ]
 docs = [
     "sphinx",
-    "sphinx_rtd_theme",
+    "pydata-sphinx-theme",
 ]
 
 

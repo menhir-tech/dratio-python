@@ -6,6 +6,12 @@
 .. image:: https://dratio.io/branding/logo.png
   :alt: Dratio.io: Python API client for dratio web services
   :target: https://dratio.io
+  :class: only-light
+
+.. image:: https://dratio.io/branding/logo-full-dark.png
+  :alt: Dratio.io: Python API client for dratio web services
+  :target: https://dratio.io
+  :class: only-dark
 
 
 Welcome to dratio's client documentation!
