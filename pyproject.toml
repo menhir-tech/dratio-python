@@ -62,6 +62,11 @@ classifiers = [
 geo = [
     "geopandas>=0.8",
 ]
+docs = [
+    "sphinx",
+    "sphinx_rtd_theme",
+]
+
 
 [project.urls]
 homepage = "https://dratio.io"
