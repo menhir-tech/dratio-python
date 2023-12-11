@@ -21,10 +21,8 @@
 #     https://dratio.io/legal/terms
 #
 
+# Geeky file to import the client as from dratio.io import Client
 
-from .client import Client
+from . import Client, __version__
 
 __all__ = ["Client", "__version__"]
-
-
-__version__ = "0.0.14"

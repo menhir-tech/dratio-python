@@ -88,9 +88,9 @@ The :class:`Client <dratio.Client>` class allows you to access all API resources
 
    client = Client('Your API key')
 
-.. note::
-   Pro Tip! You can define the key in the environment variable ``DRATIO_KEY`` and
-   simple create the client without passing the key as a parameter: ``client = Client()``.
+
+Pro Tip! You can define the key in the environment variable ``DRATIO_KEY`` and 
+simple create the client without passing the key as a parameter: ``client = Client()``.
 
 
 Basic functionalities allow you to search and filter datasets available for download.
