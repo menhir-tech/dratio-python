@@ -94,6 +94,14 @@ dataset_fileds_mapping = {
         "comment": "# Time granularity of the dataset (if it is a time series one month between time points would be 'monthly', ...)",
         "default": "custom",
     },
+    "dataset_documentation": {
+        "comment": "# Code of a dataset documentation",
+        "default": None,
+    },
+    "related_datasets": {
+        "comment": "# List of related datasets (e.g. ['municipalities', 'provinces'])",
+        "default": [],
+    },
 }
 
 

@@ -84,6 +84,7 @@ class Version(DatabaseResource, NameDescriptionMixin):
             File object representing the uploaded file.
         """
         from ..provider.file_upload import _infer_filetype, _upload_file
+
         url = f"{self._URL}{self.code}/upload/"
         filetype = _infer_filetype(file, filetype)
 
@@ -93,7 +94,8 @@ class Version(DatabaseResource, NameDescriptionMixin):
 
         url = content["url"]
         file_code = content["code"]
-        
+        version_code = content["version"]
+
         _upload_file(file=file, filetype=filetype, url=url)
 
         new_file = self._client.get_file(code=file_code)

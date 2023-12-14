@@ -217,7 +217,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
             if not len(versions):
                 raise ObjectNotFound("Version", self.code)
 
-            v = versions[0].get("code")
+            v = versions[-1].get("code")
 
             self._version = self._client.get(code=v, kind="version")
 
@@ -304,11 +304,26 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         self,
         file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
         filetype: Optional[Literal["parquet", "geoparquet"]] = None,
-        update: bool = False,
+        update: bool = True,
     ) -> "File":
         """Upload a file to the dataset."""
         file = self.version.upload_file(file=file, filetype=filetype, update=update)
+        # Flush current version
+        self._version = None
+
         return file
+
+    def set_version(self, version: str) -> "Version":
+        versions = self.list_versions(format="json")
+        #  Filter version lists by version_name
+        versions = [
+            v for v in versions if v.get("name") == version or v.get("code") == version
+        ]
+        if not len(versions):
+            raise ObjectNotFound("Version", version)
+        v = versions[0].get("code")
+        self._version = self._client.get(code=v, kind="version")
+        return self
 
     def list_versions(
         self,
@@ -565,21 +580,6 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
     def save(self) -> "Dataset":
         super().save()
         # self._features = None
-
-    def upload_file(
-        self,
-        file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
-        filetype: Optional[Literal["parquet", "geoparquet"]] = None,
-        update: bool = False,
-    ):
-        """Uploads a file to the version.
-
-        Returns
-        -------
-        File
-            File object representing the uploaded file.
-        """
-        return self.version.upload_file(file=file, filetype=filetype, update=update)
 
     def list_files(
         self,
