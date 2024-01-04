@@ -304,7 +304,7 @@ class Dataset(DatabaseResource, CategoryMixin, NameDescriptionMixin, ListFeature
         self,
         file: Union[str, "Path", "pd.DataFrame", "gpd.GeoDataFrame"],
         filetype: Optional[Literal["parquet", "geoparquet"]] = None,
-        update: bool = True,
+        update: bool = False,
     ) -> "File":
         """Upload a file to the dataset."""
         file = self.version.upload_file(file=file, filetype=filetype, update=update)

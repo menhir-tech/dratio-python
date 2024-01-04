@@ -117,8 +117,8 @@ class Client:
     use_persistent_session: bool, optional
         If True, the client will use a persistent session to perform requests
         to the API. This is useful to reuse the same connection for multiple
-        requests. Defaults to True. If False, a new session is created for each
-        request (for advanced use cases).
+        requests using a connection pool (for advanced use cases). 
+        If False, a new session is created for each request. Defaults to False.
 
     Examples
     --------
@@ -158,11 +158,11 @@ class Client:
         key: Optional[str] = None,
         env_name: str = "DRATIO_KEY",
         base_url: Optional[str] = None,
-        use_persistent_session: bool = True,
+        use_persistent_session: bool = False,
     ) -> "Client":
         """Initializes the Client object"""
         self._base_url = base_url or Client.BASE_URL
-        self.persistent_session = (use_persistent_session,)
+        self.persistent_session = use_persistent_session
         self._current_session = None
         self.key = self._check_key(key, env_name)
         self._compatibility_checked = False
@@ -231,6 +231,12 @@ class Client:
 
         return resource_class
 
+    def _get_request_headers(self) -> Dict[str, str]:
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"Token {self.key}",
+        }
+
     @property
     def _session(self) -> requests.Session:
         """Authenticated session to perform requests to the API (requests.Session).
@@ -238,11 +244,7 @@ class Client:
         """
         if self._current_session is None:
             session = requests.Session()
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Token {self.key}",
-            }
-            session.headers = headers
+            session.headers = self._get_request_headers()
             if self.persistent_session:
                 self._current_session = session
         else:
@@ -287,7 +289,13 @@ class Client:
 
         url = urljoin(self._base_url, url)
 
-        response = self._session.request(method=method, url=url, **kwargs)
+        if self.persistent_session:
+            response = self._session.request(method=method, url=url, **kwargs)
+        else:
+            headers = self._get_request_headers()
+            response = requests.request(
+                method=method, url=url, headers=headers, **kwargs
+            )
 
         if response.status_code not in allowed_status:
             _raise_client_exception(response)
