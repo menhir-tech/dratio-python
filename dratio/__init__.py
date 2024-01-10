@@ -27,4 +27,4 @@ from .client import Client
 __all__ = ["Client", "__version__"]
 
 
-__version__ = "0.0.15"
+__version__ = "0.0.16"
