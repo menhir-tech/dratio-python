@@ -14,7 +14,7 @@
   :class: only-dark
 
 
-Welcome to dratio's client documentation!
+Welcome to dratio's documentation!
 =========================================
 
 .. image:: https://badge.fury.io/py/dratio.svg
