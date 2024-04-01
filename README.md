@@ -60,7 +60,7 @@ df = dataset.to_pandas() # Download as DataFrame
 gdf = dataset.to_geopandas() # GeoDataFrame with geographic information
 ```
 
-To gain a comprehensive understanding of the Dratio Python client and explore all its features, visit the [official documentation](https://dratio.readthedocs.com) on Read the Docs.
+To gain a comprehensive understanding of the Dratio Python client and explore all its features, visit the [official documentation](https://dratio.readthedocs.io) on Read the Docs.
 
 ## License & Terms and Conditions
 
@@ -70,4 +70,4 @@ The use of the data offered by this client must comply with Dratio's terms and c
 
 ## Support
 
-If you encounter a bug or have a feature suggestion, please log an issue or contact us through our page or via email at [info@dratio.io](mailto:info@dratio.io)
+If you encounter a bug or have a feature suggestion, please log an issue or contact us through our page or via email at [info@menhir.ai](mailto:info@menhir.ai)

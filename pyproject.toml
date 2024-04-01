@@ -15,10 +15,10 @@ dependencies = [
     "typing_extensions; python_version<'3.8'",
 ]
 authors = [
-    {name="dratio.io", email="info@dratio.io"}
+    {name="dratio.io", email="info@menhir.ai"}
 ]
 maintainers = [
-    {name="dratio.io", email="info@dratio.io"}
+    {name="dratio.io", email="info@menhir.ai"}
 ]
 keywords = [
     "dratio",

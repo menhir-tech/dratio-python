@@ -131,7 +131,7 @@ This library is supported by dratio's team.
 If you find a bug, or have a feature suggestion, we would appreciate it if you 
 `create an issue <https://github.com/dratio-io/dratio-python>`_ or
 contact us through `our page <https://dratio.io/contact/>`_ or via mail
-to `info@dratio.io <mailto:info@dratio.io>`_.
+to `info@menhir.ai <mailto:info@menhir.ai>`_.
 
 .. toctree::
    :hidden:
